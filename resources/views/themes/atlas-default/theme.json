@@ -1,0 +1,11 @@
+{
+  "name": "Atlas Default",
+  "slug": "atlas-default",
+  "version": "1.0.0",
+  "author": "Atlas CMS",
+  "zones": ["header", "footer", "sidebar"],
+  "settings": {
+    "accent": "#2563eb",
+    "surface": "#ffffff"
+  }
+}

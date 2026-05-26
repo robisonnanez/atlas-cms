@@ -1,0 +1,210 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@layer components {
+    .atlantis-theme {
+        @apply min-h-screen bg-[#0f1535] text-slate-100;
+    }
+
+    .atlantis-theme .atlantis-shell {
+        @apply flex min-h-screen;
+    }
+
+    .atlantis-theme .atlantis-sidebar {
+        @apply fixed inset-y-0 left-0 z-40 w-72 -translate-x-full overflow-y-auto border-r border-white/10 bg-[linear-gradient(180deg,#222944_0%,#141b3a_100%)] px-4 py-5 transition-transform duration-300 md:static md:translate-x-0;
+    }
+
+    .atlantis-theme .atlantis-open {
+        @apply translate-x-0;
+    }
+
+    .atlantis-theme .atlantis-sidebar-brand {
+        @apply mb-8 flex items-center gap-3 px-2 text-white;
+    }
+
+    .atlantis-theme .atlantis-sidebar-brand .pi {
+        @apply text-2xl;
+    }
+
+    .atlantis-theme .atlantis-brand {
+        @apply text-[2.6rem] font-semibold leading-none text-white;
+    }
+
+    .atlantis-theme .atlantis-main {
+        @apply min-w-0 flex-1;
+    }
+
+    .atlantis-theme .atlantis-topbar {
+        @apply sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/10 bg-[#303751] px-5;
+    }
+
+    .atlantis-theme .atlantis-topbar-left,
+    .atlantis-theme .atlantis-topbar-right {
+        @apply flex items-center gap-4 text-slate-200;
+    }
+
+    .atlantis-theme .atlantis-topbar-right > .pi {
+        @apply text-sm;
+    }
+
+    .atlantis-theme .atlantis-breadcrumbs {
+        @apply flex items-center gap-2 text-[1.05rem] text-slate-200;
+    }
+
+    .atlantis-theme .atlantis-breadcrumb-sep {
+        @apply mr-2 text-slate-400;
+    }
+
+    .atlantis-theme .atlantis-toggle {
+        @apply text-slate-200;
+    }
+
+    .atlantis-theme .atlantis-avatar-button {
+        @apply rounded-full;
+    }
+
+    .atlantis-theme .atlantis-content {
+        @apply min-w-0 bg-[#0f1535] p-6;
+    }
+
+    .atlantis-theme .atlantis-menu,
+    .atlantis-theme .atlantis-submenu {
+        @apply space-y-1;
+    }
+
+    .atlantis-theme .atlantis-submenu {
+        @apply ml-5;
+    }
+
+    .atlantis-theme .atlantis-menu-item {
+        @apply flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-[1.08rem] font-medium text-white/95 hover:bg-white/10;
+    }
+
+    .atlantis-theme .atlantis-menu-left {
+        @apply flex items-center gap-3;
+    }
+
+    .atlantis-theme .atlantis-menu-caret {
+        @apply text-xs text-white/70;
+    }
+
+    .atlantis-theme .atlantis-active {
+        @apply bg-white/15;
+    }
+
+    .atlantis-theme .atlantis-card {
+        @apply rounded-xl border border-white/10 bg-[linear-gradient(180deg,#323953_0%,#252b46_100%)];
+    }
+
+    .atlantis-theme .atlantis-dark-card .p-card-body {
+        @apply p-5;
+    }
+
+    .atlantis-theme .atlantis-kpi-card .p-card-body {
+        @apply flex items-center justify-between gap-3 p-4;
+    }
+
+    .atlantis-theme .atlantis-stat-label {
+        @apply text-xs font-semibold uppercase tracking-wider text-slate-300;
+    }
+
+    .atlantis-theme .atlantis-stat-value {
+        @apply mt-1 text-[2rem] font-medium text-white;
+    }
+
+    .atlantis-theme .atlantis-stat-delta {
+        @apply mt-1 inline-flex rounded-md bg-emerald-500/20 px-2 py-0.5 text-sm font-semibold text-emerald-300;
+    }
+
+    .atlantis-theme .atlantis-pink-btn {
+        @apply rounded-lg bg-fuchsia-500 px-4 py-2 font-semibold text-white hover:bg-fuchsia-400;
+    }
+
+    .atlantis-theme .atlantis-outline-btn {
+        @apply rounded-lg border border-fuchsia-400 px-4 py-2 font-semibold text-fuchsia-400 hover:bg-fuchsia-400/10;
+    }
+
+    .atlantis-theme .atlantis-folder-btn {
+        @apply flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-base text-white/85 hover:bg-white/10;
+    }
+
+    .atlantis-theme .atlantis-folder-active {
+        @apply bg-fuchsia-500 text-white;
+    }
+
+    .atlantis-theme .atlantis-mail-row {
+        @apply grid gap-1 rounded-lg border border-transparent px-3 py-3 hover:border-white/15 hover:bg-white/5;
+    }
+
+    .atlantis-theme .atlantis-thread-btn {
+        @apply flex w-full items-center gap-3 rounded-lg border border-white/10 px-3 py-3 text-left hover:bg-white/5;
+    }
+
+    .atlantis-theme .atlantis-thread-active {
+        @apply bg-white/8;
+    }
+
+    .atlantis-theme .atlantis-bubble {
+        @apply inline-block max-w-[70%] rounded-xl px-4 py-3 text-lg;
+    }
+
+    .atlantis-theme .atlantis-bubble-them {
+        @apply border border-white/15 bg-transparent text-white;
+    }
+
+    .atlantis-theme .atlantis-bubble-me {
+        @apply bg-[#f0cce9] text-[#511d46];
+    }
+
+    .atlantis-theme .atlantis-perm-card {
+        @apply rounded-lg border border-white/10 bg-[#2b3150];
+    }
+
+    .atlantis-theme .atlantis-switch-row {
+        @apply flex items-center gap-2 rounded-md bg-white/5 px-2 py-2;
+    }
+
+    .atlantis-theme .atlantis-switch {
+        @apply h-4 w-4 accent-sky-500;
+    }
+
+    .atlantis-theme .atlantis-switch-label {
+        @apply flex-1 text-sm text-slate-100;
+    }
+
+
+    .atlantis-theme .atlantis-password-field {
+        @apply block w-full;
+    }
+
+    .atlantis-theme .atlantis-password-field.p-password {
+        @apply flex w-full;
+    }
+
+    .atlantis-theme .atlantis-password-field .p-inputtext {
+        @apply w-full;
+    }
+
+    .atlantis-theme .atlantis-password-field .p-icon-field,
+    .atlantis-theme .atlantis-password-field .p-icon-field.p-icon-field-right,
+    .atlantis-theme .atlantis-password-field [data-pc-name='iconfield'] {
+        @apply w-full;
+    }
+
+    .atlantis-theme .atlantis-overlay {
+        @apply fixed inset-0 z-30 bg-black/40 md:hidden;
+    }
+
+    .atlantis-theme input,
+    .atlantis-theme textarea,
+    .atlantis-theme select {
+        @apply text-slate-950 placeholder:text-slate-400;
+    }
+
+    .atlantis-theme label {
+        @apply text-slate-300;
+    }
+}

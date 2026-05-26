@@ -1,0 +1,1 @@
+<footer>Atlas Footer</footer>

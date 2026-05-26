@@ -1,0 +1,8 @@
+{
+  "name": "SEO Plus",
+  "slug": "seo-plus",
+  "version": "1.0.0",
+  "description": "Additional SEO helpers and metadata presets.",
+  "provider": "Modules\\Plugins\\SeoPlus\\PluginServiceProvider",
+  "requires": []
+}

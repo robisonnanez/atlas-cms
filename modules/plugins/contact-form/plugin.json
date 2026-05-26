@@ -1,0 +1,8 @@
+{
+  "name": "Contact Form",
+  "slug": "contact-form",
+  "version": "1.0.0",
+  "description": "Embeddable contact form blocks for Atlas CMS.",
+  "provider": "Modules\\Plugins\\ContactForm\\PluginServiceProvider",
+  "requires": []
+}
