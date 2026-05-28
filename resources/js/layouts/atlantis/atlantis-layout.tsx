@@ -4,7 +4,7 @@ import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Menu } from 'primereact/menu';
 import type { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import { logout } from '@/routes';
 import profile from '@/routes/profile';
@@ -12,36 +12,46 @@ import security from '@/routes/security';
 
 type NavItem = { id: number; label: string; href: string; icon?: string | null; children?: NavItem[] };
 
+type PageProps = {
+  auth: { user?: { name?: string; avatar?: string | null; profile_photo_url?: string | null } };
+  navigation?: NavItem[];
+  sidebarOpen?: boolean;
+};
+
 function userInitials(name: string): string {
   const chunks = name.trim().split(/\s+/).filter(Boolean);
-
-  if (!chunks.length) {
-    return 'U';
-  }
-
-  if (chunks.length === 1) {
-    return chunks[0].slice(0, 2).toUpperCase();
-  }
-
+  if (!chunks.length) return 'U';
+  if (chunks.length === 1) return chunks[0].slice(0, 2).toUpperCase();
   return `${chunks[0][0] ?? ''}${chunks[1][0] ?? ''}`.toUpperCase();
 }
 
 function matchesPath(currentPath: string, href: string): boolean {
   const normalizedCurrent = currentPath.replace(/\/$/, '') || '/';
   const normalizedHref = href.replace(/\/$/, '') || '/';
-
-  if (normalizedHref === '/dashboard') {
-    return normalizedCurrent === normalizedHref;
-  }
-
+  if (normalizedHref === '#' || normalizedHref === '') return false;
+  if (normalizedHref === '/dashboard') return normalizedCurrent === normalizedHref;
   return normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
+}
+
+function containsActive(item: NavItem, currentPath: string): boolean {
+  if (matchesPath(currentPath, item.href)) return true;
+  return item.children?.some((child) => containsActive(child, currentPath)) ?? false;
+}
+
+function persistSidebarState(value: boolean) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `sidebar_state=${value ? 'true' : 'false'}; path=/; max-age=31536000; samesite=lax`;
 }
 
 function MenuNode({ item, currentPath }: { item: NavItem; currentPath: string }) {
   const hasChildren = !!item.children?.length;
   const isActive = matchesPath(currentPath, item.href);
-  const childActive = !!item.children?.some((child) => matchesPath(currentPath, child.href));
+  const childActive = item.children?.some((child) => containsActive(child, currentPath)) ?? false;
   const [open, setOpen] = useState(childActive);
+
+  useEffect(() => {
+    if (childActive) setOpen(true);
+  }, [childActive]);
 
   return (
     <li className="atlantis-menu-node">
@@ -67,8 +77,9 @@ function MenuNode({ item, currentPath }: { item: NavItem; currentPath: string })
 }
 
 export default function AtlantisLayout({ children }: PropsWithChildren) {
-  const page = usePage<{ auth: { user?: { name?: string; avatar?: string | null; profile_photo_url?: string | null } }; navigation?: NavItem[] }>();
+  const page = usePage<PageProps>();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(page.props.sidebarOpen ?? true);
   const userMenuRef = useRef<Menu>(null);
   const username = page.props.auth.user?.name ?? 'Usuario';
   const avatarImageValue = page.props.auth.user?.avatar ?? page.props.auth.user?.profile_photo_url ?? null;
@@ -76,88 +87,33 @@ export default function AtlantisLayout({ children }: PropsWithChildren) {
   const avatarImage = hasAvatarImage ? avatarImageValue : undefined;
   const avatarLabel = userInitials(username);
   const navigation = page.props.navigation ?? [];
+  const currentPath = page.url.split('?')[0];
+
+  useEffect(() => {
+    setDesktopOpen(page.props.sidebarOpen ?? true);
+  }, [page.props.sidebarOpen]);
 
   const breadcrumbs = useMemo(() => {
-    const path = page.url.split('?')[0].replace(/\/$/, '');
-
-    if (path.startsWith('/admin/pages/create')) {
-      return ['Pages', 'New page'];
-    }
-
-    if (path.startsWith('/admin/pages/')) {
-      return ['Pages', 'Edit page'];
-    }
-
-    if (path === '/admin/pages') {
-      return ['Pages', 'List'];
-    }
-
-    if (path.startsWith('/admin/posts/create')) {
-      return ['Posts', 'New post'];
-    }
-
-    if (path.startsWith('/admin/posts/')) {
-      return ['Posts', 'Edit post'];
-    }
-
-    if (path === '/admin/posts') {
-      return ['Posts', 'List'];
-    }
-
-    if (path.startsWith('/admin/categories')) {
-      return ['Content', 'Taxonomies'];
-    }
-
-    if (path.startsWith('/admin/media')) {
-      return ['Content', 'Media'];
-    }
-
-    if (path.startsWith('/admin/menus')) {
-      return ['Content', 'Menus'];
-    }
-
-    if (path.startsWith('/admin/themes')) {
-      return ['Appearance', 'Themes'];
-    }
-
-    if (path.startsWith('/admin/plugins')) {
-      return ['Extensions', 'Plugins'];
-    }
-
-    if (path.startsWith('/admin/settings')) {
-      return ['Settings', 'General'];
-    }
-
-    if (path.startsWith('/admin/roles-permissions')) {
-      return ['Admin', 'Roles y Permisos'];
-    }
-
-    if (path.startsWith('/admin/users-permissions')) {
-      return ['Admin', 'Permisos por Usuario'];
-    }
-
-    if (path.startsWith('/settings/security')) {
-      return ['Configuracion', 'Seguridad'];
-    }
-
-    if (path.startsWith('/apps/chat')) {
-      return ['Apps', 'Chat'];
-    }
-
-    if (path.startsWith('/apps/mail/inbox')) {
-      return ['Apps', 'Mail', 'Inbox'];
-    }
-
-    if (path.startsWith('/apps/mail/compose')) {
-      return ['Apps', 'Mail', 'Compose'];
-    }
-
-    if (path.startsWith('/apps/mail/detail')) {
-      return ['Apps', 'Mail', 'Detail'];
-    }
-
+    const path = currentPath.replace(/\/$/, '');
+    if (path.startsWith('/admin/pages/create')) return ['Pages', 'New page'];
+    if (path.startsWith('/admin/pages/')) return ['Pages', 'Edit page'];
+    if (path === '/admin/pages') return ['Pages', 'List'];
+    if (path.startsWith('/admin/posts/create')) return ['Posts', 'New post'];
+    if (path.startsWith('/admin/posts/')) return ['Posts', 'Edit post'];
+    if (path === '/admin/posts') return ['Posts', 'List'];
+    if (path.startsWith('/admin/categories')) return ['Content', 'Taxonomies'];
+    if (path.startsWith('/admin/media')) return ['Content', 'Media'];
+    if (path.startsWith('/admin/menus')) return ['Content', 'Menus'];
+    if (path.startsWith('/admin/themes')) return ['System', 'Themes'];
+    if (path.startsWith('/admin/plugins')) return ['System', 'Plugins'];
+    if (path.startsWith('/admin/settings')) return ['System', 'Settings'];
+    if (path.startsWith('/admin/users')) return ['Admin', 'Usuarios'];
+    if (path.startsWith('/admin/roles-permissions')) return ['Admin', 'Roles y Permisos'];
+    if (path.startsWith('/admin/users-permissions')) return ['Admin', 'Permisos por Usuario'];
+    if (path.startsWith('/admin/navigation-management')) return ['Admin', 'Modulos y Menus'];
+    if (path.startsWith('/settings/security')) return ['Configuracion', 'Seguridad'];
     return ['Dashboard'];
-  }, [page.url]);
+  }, [currentPath]);
 
   const avatarMenuItems: PrimeMenuItem[] = [
     { label: 'Perfil', icon: 'pi pi-user', command: () => router.visit(profile.edit.url()) },
@@ -165,25 +121,34 @@ export default function AtlantisLayout({ children }: PropsWithChildren) {
     { label: 'Logout', icon: 'pi pi-sign-out', command: () => router.post(logout.url()) },
   ];
 
+  const toggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches) {
+      const next = !desktopOpen;
+      setDesktopOpen(next);
+      persistSidebarState(next);
+      return;
+    }
+    setMobileOpen((value) => !value);
+  };
+
   return (
     <div className="atlantis-theme min-h-screen">
       <div className="atlantis-shell">
-        <aside className={`atlantis-sidebar ${mobileOpen ? 'atlantis-open' : ''}`}>
+        <aside className={`atlantis-sidebar ${mobileOpen ? 'atlantis-open' : ''} ${desktopOpen ? '' : 'atlantis-sidebar-collapsed'}`}>
           <div className="atlantis-sidebar-brand">
-            <i className="pi pi-prime" />
-            <Link href="/dashboard" className="atlantis-brand">
-              Atlantis
+            <Link href="/dashboard" className="atlantis-brand-wrap" aria-label="Atlas CMS dashboard">
+              <img src="/atlas-cms-logo.png" alt="Atlas CMS" className="atlantis-brand-logo" />
             </Link>
           </div>
           <nav>
-            <ul className="atlantis-menu">{navigation.map((item) => <MenuNode key={item.id} item={item} currentPath={page.url.split('?')[0]} />)}</ul>
+            <ul className="atlantis-menu">{navigation.map((item) => <MenuNode key={item.id} item={item} currentPath={currentPath} />)}</ul>
           </nav>
         </aside>
 
         <div className="atlantis-main">
           <header className="atlantis-topbar">
             <div className="atlantis-topbar-left">
-              <Button type="button" className="atlantis-toggle p-button-text" icon="pi pi-bars" onClick={() => setMobileOpen((value) => !value)} />
+              <Button type="button" className="atlantis-toggle p-button-text" icon="pi pi-bars" onClick={toggleSidebar} />
               <div className="atlantis-breadcrumbs">
                 {breadcrumbs.map((crumb, index) => (
                   <span key={`${crumb}-${index}`} className="atlantis-breadcrumb-item">

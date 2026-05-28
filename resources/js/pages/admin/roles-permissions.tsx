@@ -1,5 +1,11 @@
-import { Head, router, usePage } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { Head, router, usePage } from '@inertiajs/react';
+import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
+import { InputSwitch } from 'primereact/inputswitch';
+import { InputText } from 'primereact/inputtext';
+import { Tag } from 'primereact/tag';
+import { useMemo, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type MenuEntry = { id: number; nombre: string; permission_name?: string | null };
 type ModuleEntry = { idModulos: number; nmodulo: string; menus: MenuEntry[] };
@@ -9,7 +15,7 @@ const modulePermissionName = (moduleId: number) => `module.${moduleId}.access`;
 
 export default function RolesPermissionsPage() {
     const page = usePage<{ roles: RoleEntry[]; modules: ModuleEntry[] }>();
-    const [roleName, setRoleName] = useState("");
+    const [roleName, setRoleName] = useState('');
     const [roleId, setRoleId] = useState<number>(page.props.roles[0]?.id ?? 0);
     const [roleOverrides, setRoleOverrides] = useState<Record<number, Set<string>>>({});
 
@@ -22,17 +28,14 @@ export default function RolesPermissionsPage() {
     }, [role]);
 
     const selectedPermissions = useMemo(() => {
-        if (!role) {
-            return new Set<string>();
-        }
-
+        if (!role) return new Set<string>();
         return roleOverrides[role.id] ?? rolePermissionNames;
     }, [role, roleOverrides, rolePermissionNames]);
 
+    const roleOptions = page.props.roles.map((entry) => ({ label: entry.name, value: entry.id }));
+
     const persistPermissions = (next: Set<string>) => {
-        if (!role) {
-            return;
-        }
+        if (!role) return;
 
         setRoleOverrides((previous) => ({
             ...previous,
@@ -41,18 +44,13 @@ export default function RolesPermissionsPage() {
 
         router.post(`/admin/roles-permissions/${role.id}/permissions`, {
             permissions: Array.from(next),
-        });
+        }, { preserveScroll: true });
     };
 
     const togglePermission = (permissionName: string, enabled: boolean) => {
         const next = new Set(selectedPermissions);
-
-        if (enabled) {
-            next.add(permissionName);
-        } else {
-            next.delete(permissionName);
-        }
-
+        if (enabled) next.add(permissionName);
+        else next.delete(permissionName);
         persistPermissions(next);
     };
 
@@ -62,14 +60,12 @@ export default function RolesPermissionsPage() {
 
         if (enabled) {
             next.add(modulePermission);
-
             module.menus
                 .map((menu) => menu.permission_name)
                 .filter((permission): permission is string => !!permission)
                 .forEach((permission) => next.add(permission));
         } else {
             next.delete(modulePermission);
-
             module.menus
                 .map((menu) => menu.permission_name)
                 .filter((permission): permission is string => !!permission)
@@ -79,101 +75,127 @@ export default function RolesPermissionsPage() {
         persistPermissions(next);
     };
 
+    const totalPermissions = selectedPermissions.size;
+
     return (
         <>
             <Head title="Roles y Permisos" />
-            <div className="space-y-4">
-                <section className="atlantis-card atlantis-dark-card p-4">
-                    <h2 className="mb-2 text-xl font-semibold text-white">Roles y permisos</h2>
-                    <div className="grid gap-3 md:grid-cols-[1fr,220px,140px]">
-                        <input
-                            className="p-inputtext p-component"
-                            value={roleName}
-                            placeholder="Nombre del rol"
-                            onChange={(event) => setRoleName(event.target.value)}
-                        />
-                        <select
-                            className="p-inputtext p-component"
-                            value={roleId}
-                            onChange={(event) => setRoleId(Number(event.target.value))}
-                        >
-                            {page.props.roles.map((entry) => (
-                                <option key={entry.id} value={entry.id}>
-                                    {entry.name}
-                                </option>
-                            ))}
-                        </select>
-                        <button
-                            type="button"
-                            className="atlantis-pink-btn"
-                            onClick={() => {
-                                if (!roleName.trim()) {
-                                    return;
-                                }
-
-                                router.post("/admin/roles-permissions/roles", { name: roleName.trim() });
-                            }}
-                        >
-                            Crear rol
-                        </button>
+            <div className="space-y-6">
+                <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+                    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                        <div className="space-y-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">Atlas governance</p>
+                            <h1 className="text-3xl font-semibold text-slate-950">Roles y permisos</h1>
+                            <p className="max-w-2xl text-sm text-slate-600">Controla que modulos y capacidades puede usar cada rol del CMS. Los permisos de modulo activan o desactivan grupos completos y luego puedes afinar menu por menu.</p>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Roles</p>
+                                <p className="mt-2 text-3xl font-semibold text-slate-950">{page.props.roles.length}</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Permisos activos</p>
+                                <p className="mt-2 text-3xl font-semibold text-slate-950">{totalPermissions}</p>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {page.props.modules.map((module) => {
-                        const modulePermission = modulePermissionName(module.idModulos);
-                        const moduleEnabled = selectedPermissions.has(modulePermission);
+                <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+                    <Card className="rounded-3xl border border-slate-200/80 shadow-sm">
+                        <CardHeader>
+                            <CardTitle>Seleccion de rol</CardTitle>
+                            <CardDescription>Crea nuevos roles y elige cual quieres ajustar.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <label className="space-y-2">
+                                <span className="text-sm font-medium text-slate-700">Rol activo</span>
+                                <Dropdown value={roleId} options={roleOptions} onChange={(event) => setRoleId(event.value)} className="w-full" placeholder="Selecciona un rol" />
+                            </label>
 
-                        return (
-                            <section key={module.idModulos} className="atlantis-card atlantis-perm-card p-3">
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-300">{module.nmodulo}</p>
-                                    <label className="flex items-center gap-2 text-[11px] text-slate-300">
-                                        <input
-                                            type="checkbox"
-                                            checked={moduleEnabled}
-                                            onChange={(event) => toggleModule(module, event.target.checked)}
-                                        />
-                                        Modulo activo
-                                    </label>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Rol actual</p>
+                                <div className="mt-3 flex items-center gap-3">
+                                    <Tag value={role?.name ?? 'Sin rol'} severity="info" rounded />
+                                    <span className="text-sm text-slate-600">{role?.permissions.length ?? 0} permisos base cargados</span>
                                 </div>
-                                <div className="space-y-2">
-                                    {module.menus.map((menu) => {
-                                        const permissionName = menu.permission_name ?? "";
-                                        const checked = permissionName ? selectedPermissions.has(permissionName) : false;
+                            </div>
 
-                                        return (
-                                            <label key={menu.id} className="atlantis-switch-row">
-                                                <input
-                                                    type="checkbox"
-                                                    className="atlantis-switch"
-                                                    checked={checked}
-                                                    disabled={!permissionName || !role || !moduleEnabled}
-                                                    onChange={(event) => {
-                                                        if (!permissionName) {
-                                                            return;
-                                                        }
+                            <div className="grid gap-3">
+                                <label className="space-y-2">
+                                    <span className="text-sm font-medium text-slate-700">Nuevo rol</span>
+                                    <InputText value={roleName} onChange={(event) => setRoleName(event.target.value)} placeholder="Ej. soporte-editorial" className="w-full" />
+                                </label>
+                                <Button
+                                    label="Crear rol"
+                                    icon="pi pi-plus"
+                                    className="w-full rounded-full"
+                                    onClick={() => {
+                                        if (!roleName.trim()) return;
+                                        router.post('/admin/roles-permissions/roles', { name: roleName.trim() }, { preserveScroll: true });
+                                    }}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                                                        if (!moduleEnabled) {
-                                                            const next = new Set(selectedPermissions);
-                                                            next.add(modulePermission);
-                                                            next.add(permissionName);
-                                                            persistPermissions(next);
+                    <div className="space-y-6">
+                        {page.props.modules.map((module) => {
+                            const modulePermission = modulePermissionName(module.idModulos);
+                            const moduleEnabled = selectedPermissions.has(modulePermission);
 
-                                                            return;
-                                                        }
+                            return (
+                                <Card key={module.idModulos} className="rounded-3xl border border-slate-200/80 shadow-sm">
+                                    <CardHeader>
+                                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                            <div>
+                                                <CardTitle>{module.nmodulo}</CardTitle>
+                                                <CardDescription>Activa o desactiva el modulo completo y luego ajusta sus menus visibles.</CardDescription>
+                                            </div>
+                                            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                                <span className="text-sm font-medium text-slate-700">Modulo activo</span>
+                                                <InputSwitch checked={moduleEnabled} onChange={(event) => toggleModule(module, !!event.value)} />
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            {module.menus.map((menu) => {
+                                                const permissionName = menu.permission_name ?? '';
+                                                const checked = permissionName ? selectedPermissions.has(permissionName) : false;
 
-                                                        togglePermission(permissionName, event.target.checked);
-                                                    }}
-                                                />
-                                                <span className="atlantis-switch-label">{menu.nombre}</span>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            </section>
-                        );
-                    })}
+                                                return (
+                                                    <label key={menu.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                                        <div>
+                                                            <p className="text-sm font-medium text-slate-900">{menu.nombre}</p>
+                                                            <p className="text-xs text-slate-500">{permissionName || 'Sin permiso asociado'}</p>
+                                                        </div>
+                                                        <InputSwitch
+                                                            checked={checked}
+                                                            disabled={!permissionName || !role || !moduleEnabled}
+                                                            onChange={(event) => {
+                                                                if (!permissionName) return;
+
+                                                                if (!moduleEnabled) {
+                                                                    const next = new Set(selectedPermissions);
+                                                                    next.add(modulePermission);
+                                                                    next.add(permissionName);
+                                                                    persistPermissions(next);
+                                                                    return;
+                                                                }
+
+                                                                togglePermission(permissionName, !!event.value);
+                                                            }}
+                                                        />
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </>

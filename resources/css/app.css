@@ -14,23 +14,28 @@
     }
 
     .atlantis-theme .atlantis-sidebar {
-        @apply fixed inset-y-0 left-0 z-40 w-72 -translate-x-full overflow-y-auto border-r border-white/10 bg-[linear-gradient(180deg,#222944_0%,#141b3a_100%)] px-4 py-5 transition-transform duration-300 md:static md:translate-x-0;
+        @apply fixed inset-y-0 left-0 z-40 w-72 -translate-x-full overflow-y-auto border-r border-white/10 bg-[linear-gradient(180deg,#222944_0%,#141b3a_100%)] px-4 py-5 transition-all duration-300 md:static md:translate-x-0;
     }
 
     .atlantis-theme .atlantis-open {
         @apply translate-x-0;
     }
 
+    .atlantis-theme .atlantis-sidebar-collapsed {
+        @apply md:w-0 md:overflow-hidden md:border-r-0 md:px-0 md:py-0 md:opacity-0;
+    }
+
     .atlantis-theme .atlantis-sidebar-brand {
-        @apply mb-8 flex items-center gap-3 px-2 text-white;
+        @apply mb-8 flex justify-center px-2 text-white;
     }
 
-    .atlantis-theme .atlantis-sidebar-brand .pi {
-        @apply text-2xl;
+    .atlantis-theme .atlantis-brand-wrap {
+        @apply flex w-full items-center justify-center text-white;
     }
 
-    .atlantis-theme .atlantis-brand {
-        @apply text-[2.6rem] font-semibold leading-none text-white;
+    .atlantis-theme .atlantis-brand-logo {
+        @apply h-36 w-auto max-w-[240px] object-contain;
+        filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.22));
     }
 
     .atlantis-theme .atlantis-main {
@@ -76,7 +81,7 @@
     }
 
     .atlantis-theme .atlantis-submenu {
-        @apply ml-5;
+        @apply ml-5 border-l border-white/10 pl-3;
     }
 
     .atlantis-theme .atlantis-menu-item {
@@ -174,7 +179,6 @@
     .atlantis-theme .atlantis-switch-label {
         @apply flex-1 text-sm text-slate-100;
     }
-
 
     .atlantis-theme .atlantis-password-field {
         @apply block w-full;

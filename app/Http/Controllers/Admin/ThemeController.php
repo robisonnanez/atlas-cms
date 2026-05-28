@@ -19,9 +19,11 @@ class ThemeController extends Controller
 
     public function index(): Response
     {
+        $discovered = $this->themes->syncDiscovered();
+
         return Inertia::render('admin/themes/index', [
-            'themes' => Theme::query()->orderBy('name')->get(),
-            'discovered' => $this->themes->discover(),
+            'themes' => Theme::query()->orderByDesc('is_active')->orderBy('name')->get(),
+            'discovered' => $discovered,
         ]);
     }
 

@@ -6,10 +6,12 @@ use App\Models\Concerns\HasPublishingState;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Page extends Model
 {
-    use HasPublishingState;
+    use HasPublishingState, LogsActivity;
 
     protected $fillable = [
         'title',
@@ -25,6 +27,14 @@ class Page extends Model
         'published_at',
         'author_id',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('content')
+            ->logOnly(['title', 'slug', 'status', 'template', 'excerpt', 'seo_title', 'seo_description', 'featured_media_id', 'published_at', 'author_id'])
+            ->logOnlyDirty();
+    }
 
     protected function casts(): array
     {

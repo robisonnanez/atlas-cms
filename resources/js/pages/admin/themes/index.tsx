@@ -8,49 +8,54 @@ type ThemeRecord = {
     name: string;
     slug: string;
     version: string;
+    author?: string | null;
     is_active: boolean;
+    settings?: {
+        description?: string;
+        zones?: string[];
+        templates?: string[];
+        settings_schema?: Array<{ key: string; label: string; type: string }>;
+    } | null;
 };
 
 type DiscoveredTheme = {
-    name?: string;
+    name: string;
     slug: string;
-    version?: string;
-    author?: string;
+    version: string;
+    author: string;
+    description: string;
+    zones: string[];
+    templates: string[];
+    settings_schema: Array<{ key: string; label: string; type: string }>;
 };
 
-export default function ThemesIndex({
-    themes,
-    discovered,
-}: {
-    themes: ThemeRecord[];
-    discovered: DiscoveredTheme[];
-}) {
+export default function ThemesIndex({ themes, discovered }: { themes: ThemeRecord[]; discovered: DiscoveredTheme[] }) {
     return (
         <>
-            <Head title="Themes" />
+            <Head title="Temas" />
 
             <div className="space-y-6">
                 <section className="grid gap-4 md:grid-cols-3">
                     <Card className="rounded-3xl border border-slate-200/80 shadow-sm md:col-span-2">
                         <CardHeader>
                             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">Atlas themes</p>
-                            <CardTitle className="text-3xl">Theme manager</CardTitle>
+                            <CardTitle className="text-3xl">Gestor de temas</CardTitle>
                             <CardDescription>
-                                Activate the visual shell that powers the public site and keep track of the manifests discovered on disk.
+                                Activa la capa publica del sitio, revisa zonas de plantilla y mant?n sincronizados los manifiestos detectados con el catalogo instalado.
                             </CardDescription>
                         </CardHeader>
                     </Card>
                     <Card className="rounded-3xl border border-slate-200/80 shadow-sm">
                         <CardHeader>
-                            <CardTitle>Overview</CardTitle>
+                            <CardTitle>Resumen</CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-3 text-sm">
                             <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                <span className="text-slate-600">Installed</span>
+                                <span className="text-slate-600">Instalados</span>
                                 <span className="text-lg font-semibold text-slate-950">{themes.length}</span>
                             </div>
                             <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                <span className="text-slate-600">Discovered</span>
+                                <span className="text-slate-600">Detectados</span>
                                 <span className="text-lg font-semibold text-slate-950">{discovered.length}</span>
                             </div>
                         </CardContent>
@@ -59,8 +64,8 @@ export default function ThemesIndex({
 
                 <section className="space-y-4">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-950">Installed themes</h2>
-                        <p className="text-sm text-slate-600">The themes already registered in Atlas and ready to activate.</p>
+                        <h2 className="text-lg font-semibold text-slate-950">Temas instalados</h2>
+                        <p className="text-sm text-slate-600">Temas ya registrados en Atlas y listos para activarse.</p>
                     </div>
                     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                         {themes.map((theme) => (
@@ -71,19 +76,22 @@ export default function ThemesIndex({
                                             <CardTitle>{theme.name}</CardTitle>
                                             <CardDescription>{theme.slug}</CardDescription>
                                         </div>
-                                        <Tag value={theme.is_active ? 'Active' : 'Inactive'} severity={theme.is_active ? 'success' : 'info'} rounded />
+                                        <Tag value={theme.is_active ? 'Activo' : 'Inactivo'} severity={theme.is_active ? 'success' : 'info'} rounded />
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-5">
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-                                        <div className="flex items-center justify-between">
-                                            <span>Version</span>
-                                            <span className="font-medium text-slate-900">{theme.version}</span>
-                                        </div>
+                                    <p className="min-h-12 text-sm leading-6 text-slate-600">
+                                        {theme.settings?.description || 'Este tema aun no incluye descripcion en su manifiesto.'}
+                                    </p>
+                                    <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                                        <div className="flex items-center justify-between"><span>Version</span><span className="font-medium text-slate-900">{theme.version}</span></div>
+                                        <div className="flex items-center justify-between"><span>Autor</span><span className="font-medium text-slate-900">{theme.author || 'Autor desconocido'}</span></div>
+                                        <div className="flex items-center justify-between"><span>Zonas</span><span className="font-medium text-slate-900">{theme.settings?.zones?.length ?? 0}</span></div>
+                                        <div className="flex items-center justify-between"><span>Plantillas</span><span className="font-medium text-slate-900">{theme.settings?.templates?.length ?? 0}</span></div>
                                     </div>
 
                                     <Button
-                                        label={theme.is_active ? 'Active theme' : 'Activate theme'}
+                                        label={theme.is_active ? 'Tema activo' : 'Activar tema'}
                                         icon={theme.is_active ? 'pi pi-check-circle' : 'pi pi-bolt'}
                                         severity={theme.is_active ? 'success' : 'contrast'}
                                         outlined={theme.is_active}
@@ -99,19 +107,23 @@ export default function ThemesIndex({
 
                 <section className="space-y-4">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-950">Discovered manifests</h2>
-                        <p className="text-sm text-slate-600">Themes found in the filesystem, useful for validating the active catalog.</p>
+                        <h2 className="text-lg font-semibold text-slate-950">Manifiestos detectados</h2>
+                        <p className="text-sm text-slate-600">Temas encontrados en el filesystem para validar el catalogo activo.</p>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {discovered.map((theme) => (
                             <div key={theme.slug} className="rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-5 shadow-sm">
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <div className="flex items-center justify-between gap-3">
-                                        <h3 className="font-semibold text-slate-950">{theme.name ?? theme.slug}</h3>
-                                        <Tag value={theme.version ?? 'manifest'} severity="secondary" rounded />
+                                        <h3 className="font-semibold text-slate-950">{theme.name}</h3>
+                                        <Tag value={theme.version} severity="secondary" rounded />
                                     </div>
                                     <p className="text-sm text-slate-500">{theme.slug}</p>
-                                    <p className="text-sm text-slate-600">{theme.author ? `Author: ${theme.author}` : 'No author metadata provided.'}</p>
+                                    <p className="text-sm text-slate-600">{theme.description}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {theme.zones.map((zone) => <Tag key={zone} value={zone} severity="info" rounded />)}
+                                    </div>
+                                    <p className="text-sm text-slate-600">{theme.templates.length} plantillas y {theme.settings_schema.length} ajustes configurables.</p>
                                 </div>
                             </div>
                         ))}

@@ -4,5 +4,11 @@
   "version": "1.0.0",
   "description": "Embeddable contact form blocks for Atlas CMS.",
   "provider": "Modules\\Plugins\\ContactForm\\PluginServiceProvider",
-  "requires": []
+  "author": "Atlas CMS",
+  "requires": [],
+  "hooks": ["content.render", "settings.register"],
+  "settings_schema": [
+    { "key": "recipient_email", "label": "Recipient email", "type": "email" },
+    { "key": "success_message", "label": "Success message", "type": "text" }
+  ]
 }

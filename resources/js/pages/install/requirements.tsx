@@ -1,25 +1,42 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import InstallShell from './partials/install-shell';
 
-export default function InstallRequirements({ requirements }: { requirements: Array<{ label: string; passed: boolean }> }) {
+export default function InstallRequirements({
+    steps,
+    currentStep,
+    requirements,
+}: {
+    steps: Array<{ key: string; label: string }>;
+    currentStep: string;
+    requirements: Array<{ label: string; passed: boolean }>;
+}) {
+    const passed = requirements.filter((item) => item.passed).length;
+
     return (
         <>
-            <Head title="Requirements" />
-            <div className="mx-auto max-w-4xl px-6 py-16">
-                <h1 className="text-3xl font-semibold">Server requirements</h1>
-                <div className="mt-8 space-y-4">
-                    {requirements.map((item) => (
-                        <div key={item.label} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm">
-                            <span>{item.label}</span>
-                            <span className={item.passed ? 'text-emerald-600' : 'text-amber-600'}>{item.passed ? 'Passed' : 'Needs attention'}</span>
-                        </div>
-                    ))}
+            <Head title="Requisitos" />
+            <InstallShell
+                title="Requisitos del servidor"
+                description="Atlas verifica el runtime, los permisos de escritura y la conectividad de base de datos antes de permitir la creacion del primer acceso administrativo."
+                steps={steps}
+                currentStep={currentStep}
+                backHref="/install"
+                nextHref="/install/database"
+            >
+                <div className="space-y-6">
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-700">
+                        {passed} de {requirements.length} verificaciones superadas.
+                    </div>
+                    <div className="grid gap-4">
+                        {requirements.map((item) => (
+                            <div key={item.label} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <span>{item.label}</span>
+                                <span className={item.passed ? 'text-emerald-600' : 'text-amber-600'}>{item.passed ? 'Correcto' : 'Requiere atencion'}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="mt-8 flex gap-3">
-                    <Link href="/install/database" className="rounded-full bg-slate-950 px-5 py-3 font-medium text-white">
-                        Continue
-                    </Link>
-                </div>
-            </div>
+            </InstallShell>
         </>
     );
 }

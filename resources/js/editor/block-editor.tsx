@@ -18,12 +18,24 @@ const BLOCK_TYPES = [
     { type: 'html', label: 'HTML', icon: Code2 },
 ] as const;
 
+function normalizePreviewHtml(html: string): string {
+    return html
+        .replace(/<!doctype[^>]*>/gi, '')
+        .replace(/<html[^>]*>/gi, '')
+        .replace(/<\/html>/gi, '')
+        .replace(/<body[^>]*>/gi, '')
+        .replace(/<\/body>/gi, '')
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gis, '')
+        .trim();
+}
+
 function renderPreviewBlock(block: AtlasBlock, index: number) {
     const text = String(block.data.text ?? '');
     const url = String(block.data.url ?? '');
     const alt = String(block.data.alt ?? '');
     const label = String(block.data.label ?? 'Action');
     const html = String(block.data.html ?? '');
+    const previewHtml = normalizePreviewHtml(html);
 
     switch (block.type) {
         case 'heading':
@@ -54,9 +66,15 @@ function renderPreviewBlock(block: AtlasBlock, index: number) {
         case 'embed':
         case 'html':
             return (
-                <pre key={index} className="overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs text-slate-100">
-                    {html || `<${block.type}> preview`}
-                </pre>
+                <div key={index} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                    <div className="max-h-[36rem] overflow-auto p-6">
+                        {previewHtml ? (
+                            <div className="max-w-none" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                        ) : (
+                            <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">HTML preview will appear here.</div>
+                        )}
+                    </div>
+                </div>
             );
         default:
             return <p key={index} className="text-base leading-7 text-slate-700">{text || 'Paragraph block'}</p>;
@@ -105,7 +123,7 @@ export default function BlockEditor({
                 </div>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <div className="grid gap-6 xl:grid-cols-2">
                 <div className="space-y-4">
                     {value.map((block, index) => (
                         <div key={`${block.type}-${index}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -193,7 +211,7 @@ export default function BlockEditor({
                                     <Label htmlFor={`block-html-${index}`} className="text-sm font-medium text-slate-700">HTML / embed</Label>
                                     <textarea
                                         id={`block-html-${index}`}
-                                        className="min-h-28 rounded-xl border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-950 placeholder:text-slate-400"
+                                        className="min-h-72 rounded-xl border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-950 placeholder:text-slate-400"
                                         value={String(block.data.html ?? '')}
                                         onChange={(event) => updateBlock(index, { ...block, data: { ...block.data, html: event.target.value } })}
                                     />
@@ -209,7 +227,7 @@ export default function BlockEditor({
                     )}
                 </div>
 
-                <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-24">
                     <div className="mb-4">
                         <h4 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Live preview</h4>
                         <p className="mt-1 text-sm text-slate-500">A fast approximation of how this content will render publicly.</p>

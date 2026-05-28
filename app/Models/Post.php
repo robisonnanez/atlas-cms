@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Post extends Model
 {
-    use HasPublishingState;
+    use HasPublishingState, LogsActivity;
 
     protected $fillable = [
         'title',
@@ -26,6 +28,14 @@ class Post extends Model
         'author_id',
         'primary_category_id',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('content')
+            ->logOnly(['title', 'slug', 'status', 'excerpt', 'seo_title', 'seo_description', 'featured_media_id', 'published_at', 'author_id', 'primary_category_id'])
+            ->logOnlyDirty();
+    }
 
     protected function casts(): array
     {

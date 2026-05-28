@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\Media;
 use App\Models\Permission;
 use App\Models\Plugin;
 use App\Models\Theme;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 test('users with the media view permission can access media library', function () {
     Permission::findOrCreate('atlas.media.view', 'web');
@@ -25,6 +27,55 @@ test('users without the media create permission cannot upload files', function (
     $this->actingAs($user)
         ->post('/admin/media', [])
         ->assertForbidden();
+});
+
+test('users without the media delete permission cannot delete files', function () {
+    Storage::fake('public');
+    Permission::findOrCreate('atlas.media.view', 'web');
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('atlas.media.view');
+
+    $media = Media::query()->create([
+        'disk' => 'public',
+        'path' => 'media/example.jpg',
+        'filename' => 'example.jpg',
+        'mime_type' => 'image/jpeg',
+        'extension' => 'jpg',
+        'size' => 1200,
+        'uploaded_by' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/admin/media/{$media->id}")
+        ->assertForbidden();
+});
+
+test('users with the media delete permission can delete files', function () {
+    Storage::fake('public');
+    Permission::findOrCreate('atlas.media.delete', 'web');
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('atlas.media.delete');
+
+    Storage::disk('public')->put('media/example.jpg', 'demo');
+
+    $media = Media::query()->create([
+        'disk' => 'public',
+        'path' => 'media/example.jpg',
+        'filename' => 'example.jpg',
+        'mime_type' => 'image/jpeg',
+        'extension' => 'jpg',
+        'size' => 1200,
+        'uploaded_by' => $user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/admin/media/{$media->id}")
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('media', ['id' => $media->id]);
+    Storage::disk('public')->assertMissing('media/example.jpg');
 });
 
 test('users with the themes view permission can access themes', function () {

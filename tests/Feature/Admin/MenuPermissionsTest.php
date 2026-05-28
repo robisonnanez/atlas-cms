@@ -35,6 +35,66 @@ test('users with the menus permission can access menu management', function () {
         ->assertOk();
 });
 
+test('users without the menus delete permission cannot delete menus', function () {
+    Permission::findOrCreate('atlas.menus.view', 'web');
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('atlas.menus.view');
+
+    $menu = CmsMenu::query()->create([
+        'name' => 'Primary',
+        'location' => 'primary',
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/admin/menus/{$menu->id}")
+        ->assertForbidden();
+});
+
+test('users with the menus delete permission can delete menus', function () {
+    Permission::findOrCreate('atlas.menus.delete', 'web');
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('atlas.menus.delete');
+
+    $menu = CmsMenu::query()->create([
+        'name' => 'Primary',
+        'location' => 'primary',
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/admin/menus/{$menu->id}")
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('menus', ['id' => $menu->id]);
+});
+
+test('users with the menus delete permission can delete menu items', function () {
+    Permission::findOrCreate('atlas.menus.delete', 'web');
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('atlas.menus.delete');
+
+    $menu = CmsMenu::query()->create([
+        'name' => 'Primary',
+        'location' => 'primary',
+    ]);
+
+    $item = MenuItem::query()->create([
+        'menu_id' => $menu->id,
+        'type' => 'custom',
+        'label' => 'Docs',
+        'url' => '/docs',
+        'sort_order' => 1,
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/admin/menu-items/{$item->id}")
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('menu_items', ['id' => $item->id]);
+});
+
 test('menu items can be reordered', function () {
     $role = Role::findOrCreate('super-admin', 'web');
     $user = User::factory()->create();

@@ -3,9 +3,15 @@
   "slug": "atlas-default",
   "version": "1.0.0",
   "author": "Atlas CMS",
+  "description": "Default public-facing theme for Atlas CMS with editorial layouts and modular zones.",
   "zones": ["header", "footer", "sidebar"],
+  "templates": ["home", "page", "post"],
   "settings": {
     "accent": "#2563eb",
     "surface": "#ffffff"
-  }
+  },
+  "settings_schema": [
+    { "key": "accent", "label": "Accent color", "type": "color" },
+    { "key": "surface", "label": "Surface color", "type": "color" }
+  ]
 }

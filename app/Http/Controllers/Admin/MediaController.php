@@ -55,4 +55,15 @@ class MediaController extends Controller
 
         return back()->with('success', 'Media updated.');
     }
+
+    public function destroy(Media $medium): RedirectResponse
+    {
+        if ($medium->disk && $medium->path && Storage::disk($medium->disk)->exists($medium->path)) {
+            Storage::disk($medium->disk)->delete($medium->path);
+        }
+
+        $medium->delete();
+
+        return back()->with('success', 'Media deleted.');
+    }
 }

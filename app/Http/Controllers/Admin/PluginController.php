@@ -18,9 +18,11 @@ class PluginController extends Controller
 
     public function index(): Response
     {
+        $discovered = $this->plugins->syncDiscovered();
+
         return Inertia::render('admin/plugins/index', [
-            'plugins' => Plugin::query()->orderBy('name')->get(),
-            'discovered' => $this->plugins->discover(),
+            'plugins' => Plugin::query()->orderByDesc('is_active')->orderBy('name')->get(),
+            'discovered' => $discovered,
         ]);
     }
 

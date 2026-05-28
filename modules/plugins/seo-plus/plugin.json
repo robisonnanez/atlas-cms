@@ -4,5 +4,11 @@
   "version": "1.0.0",
   "description": "Additional SEO helpers and metadata presets.",
   "provider": "Modules\\Plugins\\SeoPlus\\PluginServiceProvider",
-  "requires": []
+  "author": "Atlas CMS",
+  "requires": [],
+  "hooks": ["seo.meta", "content.saved"],
+  "settings_schema": [
+    { "key": "default_og_image", "label": "Default OG image", "type": "media" },
+    { "key": "append_brand_suffix", "label": "Append brand suffix", "type": "boolean" }
+  ]
 }
