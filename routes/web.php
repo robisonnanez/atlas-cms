@@ -61,8 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('media', [MediaController::class, 'index'])->middleware('permission:atlas.media.view')->name('media.index');
         Route::post('media', [MediaController::class, 'store'])->middleware('permission:atlas.media.create')->name('media.store');
+        Route::post('media/directories', [MediaController::class, 'storeDirectory'])->middleware('permission:atlas.media.create')->name('media.directories.store');
         Route::put('media/{medium}', [MediaController::class, 'update'])->middleware('permission:atlas.media.edit')->name('media.update');
         Route::delete('media/{medium}', [MediaController::class, 'destroy'])->middleware('permission:atlas.media.delete')->name('media.destroy');
+        Route::delete('media/directories/{directory}', [MediaController::class, 'destroyDirectory'])->middleware('permission:atlas.media.delete')->name('media.directories.destroy');
 
         Route::get('menus', [MenuController::class, 'index'])->middleware('permission:atlas.menus.view')->name('menus.index');
         Route::post('menus', [MenuController::class, 'store'])->middleware('permission:atlas.menus.create')->name('menus.store');

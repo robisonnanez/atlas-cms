@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Domain\Menus\Contracts\MenuResolverContract;
 use App\Models\Category;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Setting;
 use App\Support\Cms\SeoMetadataBuilder;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,6 +31,7 @@ class PublicSiteController extends Controller
             'site' => $this->siteProps(),
             'menu' => $this->menus->resolve('primary'),
             'hero' => $page ? $this->serializePage($page) : null,
+            'carousel' => $this->carouselMedia(),
             'posts' => Post::query()->published()->latest('published_at')->take(6)->get(),
         ]);
     }
@@ -94,6 +97,7 @@ class PublicSiteController extends Controller
         return [
             'identity' => Setting::query()->where('key', 'site.identity')->first()?->value ?? ['name' => 'Atlas CMS'],
             'seo' => Setting::query()->where('key', 'site.seo')->first()?->value ?? [],
+            'chrome' => Setting::query()->where('key', 'site.chrome')->first()?->value ?? [],
         ];
     }
 
@@ -103,5 +107,30 @@ class PublicSiteController extends Controller
             ...$page->toArray(),
             'rendered_html' => $page->content_html ?: $this->renderer->render($page->content_json ?? []),
         ];
+    }
+
+    protected function carouselMedia(): array
+    {
+        $preferred = Media::query()
+            ->with('directory')
+            ->where('mime_type', 'like', 'image/%')
+            ->whereHas('directory', fn ($query) => $query->whereIn('slug', ['carousel', 'carrusel']))
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $collection = $preferred->isNotEmpty()
+            ? $preferred
+            : Media::query()->with('directory')->where('mime_type', 'like', 'image/%')->latest()->take(5)->get();
+
+        return $collection
+            ->map(fn (Media $media) => [
+                'id' => $media->id,
+                'title' => $media->title ?: $media->filename,
+                'alt' => $media->alt_text ?: $media->title ?: $media->filename,
+                'url' => $media->metadata['url'] ?? Storage::disk($media->disk)->url($media->path),
+            ])
+            ->values()
+            ->all();
     }
 }

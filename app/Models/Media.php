@@ -12,6 +12,7 @@ class Media extends Model
     use LogsActivity;
 
     protected $fillable = [
+        'directory_id',
         'disk',
         'path',
         'filename',
@@ -28,7 +29,7 @@ class Media extends Model
     {
         return LogOptions::defaults()
             ->useLogName('media')
-            ->logOnly(['disk', 'path', 'filename', 'mime_type', 'extension', 'size', 'alt_text', 'title', 'uploaded_by'])
+            ->logOnly(['directory_id', 'disk', 'path', 'filename', 'mime_type', 'extension', 'size', 'alt_text', 'title', 'uploaded_by'])
             ->logOnlyDirty();
     }
 
@@ -37,6 +38,11 @@ class Media extends Model
         return [
             'metadata' => 'array',
         ];
+    }
+
+    public function directory(): BelongsTo
+    {
+        return $this->belongsTo(MediaDirectory::class, 'directory_id');
     }
 
     public function uploader(): BelongsTo

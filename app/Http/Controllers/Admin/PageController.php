@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\Revision;
-use App\Domain\Content\Contracts\ContentRendererContract;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -48,7 +48,10 @@ class PageController extends Controller
     public function edit(Page $page): Response
     {
         return Inertia::render('admin/pages/form', [
-            'page' => $page,
+            'page' => [
+                ...$page->toArray(),
+                'content_json' => $this->editableBlocks($page->content_json, $page->content_html),
+            ],
             'revisions' => $page->revisions()
                 ->with('author:id,name')
                 ->latest()
@@ -122,6 +125,22 @@ class PageController extends Controller
         $data['published_at'] = $data['status'] === 'published' ? now() : null;
 
         return $data;
+    }
+
+    protected function editableBlocks(?array $blocks, ?string $html): array
+    {
+        if (! empty($blocks)) {
+            return $blocks;
+        }
+
+        if ($html) {
+            return [[
+                'type' => 'html',
+                'data' => ['html' => $html],
+            ]];
+        }
+
+        return [];
     }
 
     protected function storeRevision(Page $page, Request $request): void
