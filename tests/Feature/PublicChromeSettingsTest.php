@@ -56,3 +56,47 @@ it('renders structured header and footer content from public settings', function
         ->assertSee('info@atlas.test')
         ->assertSee('Administrado desde Atlas CMS.');
 });
+
+
+it('prioritizes advanced header and footer html when provided', function () {
+    Setting::query()->create([
+        'group' => 'general',
+        'key' => 'site.identity',
+        'value' => ['name' => 'Atlas CMS', 'tagline' => 'Demo'],
+        'is_public' => true,
+    ]);
+
+    Setting::query()->create([
+        'group' => 'theme',
+        'key' => 'site.chrome',
+        'value' => [
+            'header' => [
+                'notice_label' => 'Comunidad',
+                'notice_text' => 'Inscripciones abiertas',
+                'advanced_html' => '<div>Header avanzado Atlas</div>',
+            ],
+            'footer' => [
+                'intro_title' => 'Atlas Institucional',
+                'advanced_html' => '<div>Footer avanzado Atlas</div>',
+            ],
+        ],
+        'is_public' => true,
+    ]);
+
+    Page::query()->create([
+        'title' => 'Inicio',
+        'slug' => 'home',
+        'status' => 'published',
+        'template' => 'home',
+        'excerpt' => 'Demo',
+        'content_html' => '<p>Contenido demo</p>',
+        'seo_title' => 'Inicio',
+        'seo_description' => 'Demo',
+        'published_at' => now(),
+    ]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('Header avanzado Atlas')
+        ->assertSee('Footer avanzado Atlas');
+});

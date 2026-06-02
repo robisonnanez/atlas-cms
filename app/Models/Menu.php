@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Menu extends Model
 {
     use LogsActivity;
+
     protected $table = 'menu';
 
     protected $fillable = [
@@ -23,15 +24,14 @@ class Menu extends Model
         'orden',
         'cesdo',
         'permission_name',
+        'translations',
     ];
-
-
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->useLogName('navigation')
-            ->logOnly(['idModulos', 'nombre', 'url', 'icono', 'id_menu', 'main', 'orden', 'cesdo', 'permission_name'])
+            ->logOnly(['idModulos', 'nombre', 'url', 'icono', 'id_menu', 'main', 'orden', 'cesdo', 'permission_name', 'translations'])
             ->logOnlyDirty();
     }
 
@@ -40,6 +40,7 @@ class Menu extends Model
         return [
             'main' => 'boolean',
             'cesdo' => 'boolean',
+            'translations' => 'array',
         ];
     }
 
@@ -56,5 +57,12 @@ class Menu extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'id_menu')->orderBy('orden');
+    }
+
+    public function labelFor(string $locale = 'es'): string
+    {
+        return data_get($this->translations, $locale)
+            ?: data_get($this->translations, 'es')
+            ?: $this->nombre;
     }
 }

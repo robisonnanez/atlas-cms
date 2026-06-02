@@ -27,7 +27,7 @@ test('super admins can create pages from the admin', function () {
         'excerpt' => 'Created from automated test.',
         'content_json' => [
             ['type' => 'heading', 'data' => ['text' => 'Hello Atlas']],
-            ['type' => 'paragraph', 'data' => ['text' => 'Body copy']],
+            ['type' => 'rich_text', 'data' => ['html' => '<p>Body copy</p>']],
         ],
         'seo_title' => 'QA page',
         'seo_description' => 'Created from test',

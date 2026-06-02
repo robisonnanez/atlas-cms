@@ -6,6 +6,7 @@ use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Domain\Menus\Contracts\MenuResolverContract;
 use App\Models\Category;
 use App\Models\Media;
+use App\Models\MediaDirectory;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Setting;
@@ -31,8 +32,8 @@ class PublicSiteController extends Controller
             'site' => $this->siteProps(),
             'menu' => $this->menus->resolve('primary'),
             'hero' => $page ? $this->serializePage($page) : null,
-            'carousel' => $this->carouselMedia(),
-            'posts' => Post::query()->published()->latest('published_at')->take(6)->get(),
+            'mediaLibrary' => $this->mediaLibrary(),
+            'latestPosts' => $this->latestPosts(),
         ]);
     }
 
@@ -44,6 +45,8 @@ class PublicSiteController extends Controller
             'site' => $this->siteProps(),
             'menu' => $this->menus->resolve('primary'),
             'page' => $this->serializePage($page),
+            'mediaLibrary' => $this->mediaLibrary(),
+            'latestPosts' => $this->latestPosts(),
             'seo' => $this->seo->forContent($page->seo_title ?: $page->title, $page->seo_description, url('/'.$page->slug)),
         ]);
     }
@@ -66,8 +69,11 @@ class PublicSiteController extends Controller
             'menu' => $this->menus->resolve('primary'),
             'post' => [
                 ...$post->toArray(),
+                'content_json' => $post->content_json ?? [],
                 'rendered_html' => $post->content_html ?: $this->renderer->render($post->content_json ?? []),
             ],
+            'mediaLibrary' => $this->mediaLibrary(),
+            'latestPosts' => $this->latestPosts(),
             'seo' => $this->seo->forContent($post->seo_title ?: $post->title, $post->seo_description, url('/blog/'.$post->slug)),
         ]);
     }
@@ -98,6 +104,7 @@ class PublicSiteController extends Controller
             'identity' => Setting::query()->where('key', 'site.identity')->first()?->value ?? ['name' => 'Atlas CMS'],
             'seo' => Setting::query()->where('key', 'site.seo')->first()?->value ?? [],
             'chrome' => Setting::query()->where('key', 'site.chrome')->first()?->value ?? [],
+            'locale' => app()->getLocale(),
         ];
     }
 
@@ -105,32 +112,55 @@ class PublicSiteController extends Controller
     {
         return [
             ...$page->toArray(),
+            'content_json' => $page->content_json ?? [],
             'rendered_html' => $page->content_html ?: $this->renderer->render($page->content_json ?? []),
         ];
     }
 
-    protected function carouselMedia(): array
+    protected function latestPosts(): array
     {
-        $preferred = Media::query()
-            ->with('directory')
-            ->where('mime_type', 'like', 'image/%')
-            ->whereHas('directory', fn ($query) => $query->whereIn('slug', ['carousel', 'carrusel']))
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $collection = $preferred->isNotEmpty()
-            ? $preferred
-            : Media::query()->with('directory')->where('mime_type', 'like', 'image/%')->latest()->take(5)->get();
-
-        return $collection
-            ->map(fn (Media $media) => [
-                'id' => $media->id,
-                'title' => $media->title ?: $media->filename,
-                'alt' => $media->alt_text ?: $media->title ?: $media->filename,
-                'url' => $media->metadata['url'] ?? Storage::disk($media->disk)->url($media->path),
+        return Post::query()
+            ->published()
+            ->latest('published_at')
+            ->take(6)
+            ->get(['id', 'title', 'slug', 'excerpt'])
+            ->map(fn (Post $post) => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+                'url' => '/blog/'.$post->slug,
             ])
             ->values()
             ->all();
+    }
+
+    protected function mediaLibrary(): array
+    {
+        return [
+            'directories' => MediaDirectory::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
+                ->map(fn (MediaDirectory $directory) => [
+                    'id' => $directory->id,
+                    'name' => $directory->name,
+                    'slug' => $directory->slug,
+                ])
+                ->values(),
+            'assets' => Media::query()
+                ->with('directory')
+                ->where('mime_type', 'like', 'image/%')
+                ->latest()
+                ->get()
+                ->map(fn (Media $media) => [
+                    'id' => $media->id,
+                    'title' => $media->title ?: $media->filename,
+                    'alt' => $media->alt_text ?: $media->title ?: $media->filename,
+                    'url' => $media->metadata['url'] ?? Storage::disk($media->disk)->url($media->path),
+                    'directory_id' => $media->directory?->id,
+                    'directory_name' => $media->directory?->name,
+                ])
+                ->values(),
+        ];
     }
 }

@@ -71,6 +71,18 @@
         @apply rounded-full;
     }
 
+    .atlantis-theme .atlas-locale-flag {
+        @apply inline-block h-5 w-5 rounded-full border border-white/20 shadow-sm;
+    }
+
+    .atlantis-theme .atlas-locale-flag-es {
+        background: linear-gradient(180deg, #c81d25 0 30%, #f6d74a 30% 70%, #c81d25 70% 100%);
+    }
+
+    .atlantis-theme .atlas-locale-flag-en {
+        background: linear-gradient(135deg, #1d4ed8 0 50%, #ef4444 50% 100%);
+    }
+
     .atlantis-theme .atlantis-content {
         @apply min-w-0 bg-[#0f1535] p-6;
     }

@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Modulo extends Model
 {
     use LogsActivity;
+
     protected $table = 'modulos';
 
     protected $primaryKey = 'idModulos';
@@ -26,15 +27,14 @@ class Modulo extends Model
         'color',
         'detalle',
         'activo',
+        'translations',
     ];
-
-
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->useLogName('navigation')
-            ->logOnly(['idModulos', 'nmodulo', 'orden', 'icono', 'color', 'detalle', 'activo'])
+            ->logOnly(['idModulos', 'nmodulo', 'orden', 'icono', 'color', 'detalle', 'activo', 'translations'])
             ->logOnlyDirty();
     }
 
@@ -42,11 +42,19 @@ class Modulo extends Model
     {
         return [
             'activo' => 'boolean',
+            'translations' => 'array',
         ];
     }
 
     public function menus(): HasMany
     {
         return $this->hasMany(Menu::class, 'idModulos', 'idModulos');
+    }
+
+    public function labelFor(string $locale = 'es'): string
+    {
+        return data_get($this->translations, $locale)
+            ?: data_get($this->translations, 'es')
+            ?: $this->nmodulo;
     }
 }

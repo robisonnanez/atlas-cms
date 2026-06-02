@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Media;
+use App\Models\MediaDirectory;
 use App\Models\Post;
 use App\Models\Revision;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -35,6 +38,8 @@ class PostController extends Controller
             'categories' => Category::query()->orderBy('name')->get(),
             'tags' => Tag::query()->orderBy('name')->get(),
             'revisions' => [],
+            'editorMedia' => $this->editorMediaPayload(),
+            'latestPostsPreview' => $this->latestPostsPreview(),
         ]);
     }
 
@@ -48,7 +53,7 @@ class PostController extends Controller
         $post->tags()->sync($request->input('tag_ids', []));
         $this->storeRevision($post, $request);
 
-        return redirect()->route('admin.posts.index')->with('success', 'Post created.');
+        return redirect()->route('admin.posts.index')->with('success', 'Entrada creada correctamente.');
     }
 
     public function edit(Post $post): Response
@@ -56,7 +61,10 @@ class PostController extends Controller
         $post->load(['categories:id', 'tags:id']);
 
         return Inertia::render('admin/posts/form', [
-            'post' => $post,
+            'post' => [
+                ...$post->toArray(),
+                'content_json' => $this->editableBlocks($post->content_json, $post->content_html),
+            ],
             'categories' => Category::query()->orderBy('name')->get(),
             'tags' => Tag::query()->orderBy('name')->get(),
             'revisions' => $post->revisions()
@@ -69,6 +77,8 @@ class PostController extends Controller
                     'created_at' => $revision->created_at?->toIso8601String(),
                     'author_name' => $revision->author?->name,
                 ]),
+            'editorMedia' => $this->editorMediaPayload(),
+            'latestPostsPreview' => $this->latestPostsPreview(),
         ]);
     }
 
@@ -79,14 +89,14 @@ class PostController extends Controller
         $post->tags()->sync($request->input('tag_ids', []));
         $this->storeRevision($post, $request);
 
-        return redirect()->route('admin.posts.index')->with('success', 'Post updated.');
+        return redirect()->route('admin.posts.index')->with('success', 'Entrada actualizada correctamente.');
     }
 
     public function destroy(Post $post): RedirectResponse
     {
         $post->delete();
 
-        return redirect()->route('admin.posts.index')->with('success', 'Post deleted.');
+        return redirect()->route('admin.posts.index')->with('success', 'Entrada eliminada correctamente.');
     }
 
     public function restoreRevision(Request $request, Post $post, Revision $revision): RedirectResponse
@@ -115,7 +125,7 @@ class PostController extends Controller
         $post->tags()->sync($snapshot['tag_ids'] ?? []);
         $this->storeRevision($post, $request);
 
-        return back()->with('success', 'Post restored from revision.');
+        return back()->with('success', 'La entrada se restauró desde la revisión seleccionada.');
     }
 
     protected function payload(Request $request): array
@@ -138,6 +148,22 @@ class PostController extends Controller
         return $data;
     }
 
+    protected function editableBlocks(?array $blocks, ?string $html): array
+    {
+        if (! empty($blocks)) {
+            return $blocks;
+        }
+
+        if ($html) {
+            return [[
+                'type' => 'html',
+                'data' => ['html' => $html],
+            ]];
+        }
+
+        return [];
+    }
+
     protected function storeRevision(Post $post, Request $request): void
     {
         Revision::query()->create([
@@ -150,5 +176,51 @@ class PostController extends Controller
             ],
             'author_id' => $request->user()?->id,
         ]);
+    }
+
+    protected function editorMediaPayload(): array
+    {
+        return [
+            'directories' => MediaDirectory::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
+                ->map(fn (MediaDirectory $directory) => [
+                    'id' => $directory->id,
+                    'name' => $directory->name,
+                    'slug' => $directory->slug,
+                ])
+                ->values(),
+            'assets' => Media::query()
+                ->with('directory')
+                ->where('mime_type', 'like', 'image/%')
+                ->latest()
+                ->get()
+                ->map(fn (Media $media) => [
+                    'id' => $media->id,
+                    'title' => $media->title ?: $media->filename,
+                    'alt' => $media->alt_text ?: $media->title ?: $media->filename,
+                    'url' => $media->metadata['url'] ?? Storage::disk($media->disk)->url($media->path),
+                    'directory_id' => $media->directory?->id,
+                    'directory_name' => $media->directory?->name,
+                ])
+                ->values(),
+        ];
+    }
+
+    protected function latestPostsPreview(): array
+    {
+        return Post::query()
+            ->published()
+            ->latest('published_at')
+            ->take(6)
+            ->get(['id', 'title', 'slug', 'excerpt'])
+            ->map(fn (Post $post) => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+            ])
+            ->values()
+            ->all();
     }
 }

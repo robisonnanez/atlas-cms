@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserPermissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\PublicSiteController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/install', [InstallController::class, 'welcome'])->name('install.welcome');
@@ -30,6 +31,17 @@ Route::any('register', static function () {
 
 Route::get('/auth/error', static fn () => inertia('auth/error'))->name('auth.error');
 Route::get('/auth/access', static fn () => inertia('auth/access'))->name('auth.access');
+
+
+Route::post('/locale', function (Request $request) {
+    $data = $request->validate([
+        'locale' => ['required', 'in:es,en'],
+    ]);
+
+    $request->session()->put('atlas.locale', $data['locale']);
+
+    return back();
+})->name('locale.switch');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -76,9 +88,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('menu-items/{item}', [MenuController::class, 'updateItem'])->middleware('permission:atlas.menus.edit')->name('menus.items.update');
 
         Route::get('themes', [ThemeController::class, 'index'])->middleware('permission:atlas.themes.view')->name('themes.index');
+        Route::post('themes/install', [ThemeController::class, 'install'])->middleware('permission:atlas.themes.activate')->name('themes.install');
         Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->middleware('permission:atlas.themes.activate')->name('themes.activate');
 
         Route::get('plugins', [PluginController::class, 'index'])->middleware('permission:atlas.plugins.view')->name('plugins.index');
+        Route::post('plugins/install', [PluginController::class, 'install'])->middleware('permission:atlas.plugins.toggle')->name('plugins.install');
         Route::post('plugins/{plugin}/toggle', [PluginController::class, 'toggle'])->middleware('permission:atlas.plugins.toggle')->name('plugins.toggle');
 
         Route::get('settings', [SettingController::class, 'edit'])->middleware('permission:atlas.settings.view')->name('settings.edit');

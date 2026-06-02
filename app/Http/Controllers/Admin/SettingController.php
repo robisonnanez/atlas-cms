@@ -13,12 +13,23 @@ class SettingController extends Controller
 {
     public function edit(): Response
     {
+        $identity = Setting::query()->where('key', 'site.identity')->first();
+        $seo = Setting::query()->where('key', 'site.seo')->first();
+        $system = Setting::query()->where('key', 'site.system')->first();
+        $chrome = Setting::query()->where('key', 'site.chrome')->first();
+        $chromeValue = $chrome?->value ?? [];
+
+        data_set($chromeValue, 'header.advanced_html', data_get($chromeValue, 'header.advanced_html') ?: $this->renderHeaderHtml($identity?->value ?? []));
+        data_set($chromeValue, 'footer.advanced_html', data_get($chromeValue, 'footer.advanced_html') ?: $this->renderFooterHtml($identity?->value ?? []));
+
         return Inertia::render('admin/settings/edit', [
             'settings' => [
-                'identity' => Setting::query()->where('key', 'site.identity')->first(),
-                'seo' => Setting::query()->where('key', 'site.seo')->first(),
-                'system' => Setting::query()->where('key', 'site.system')->first(),
-                'chrome' => Setting::query()->where('key', 'site.chrome')->first(),
+                'identity' => $identity,
+                'seo' => $seo,
+                'system' => $system,
+                'chrome' => [
+                    'value' => $chromeValue,
+                ],
             ],
         ]);
     }
@@ -33,19 +44,8 @@ class SettingController extends Controller
             'maintenance' => ['nullable', 'boolean'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string'],
-            'header_notice_label' => ['nullable', 'string', 'max:120'],
-            'header_notice_text' => ['nullable', 'string', 'max:255'],
-            'header_cta_label' => ['nullable', 'string', 'max:120'],
-            'header_cta_url' => ['nullable', 'string', 'max:255'],
-            'footer_intro_title' => ['nullable', 'string', 'max:255'],
-            'footer_intro_body' => ['nullable', 'string'],
-            'footer_col_1_title' => ['nullable', 'string', 'max:255'],
-            'footer_col_1_body' => ['nullable', 'string'],
-            'footer_col_2_title' => ['nullable', 'string', 'max:255'],
-            'footer_col_2_body' => ['nullable', 'string'],
-            'footer_col_3_title' => ['nullable', 'string', 'max:255'],
-            'footer_col_3_body' => ['nullable', 'string'],
-            'footer_bottom_text' => ['nullable', 'string', 'max:255'],
+            'header_advanced_html' => ['nullable', 'string'],
+            'footer_advanced_html' => ['nullable', 'string'],
         ]);
 
         Setting::query()->updateOrCreate(
@@ -55,7 +55,7 @@ class SettingController extends Controller
 
         Setting::query()->updateOrCreate(
             ['key' => 'site.system'],
-            ['group' => 'system', 'value' => ['timezone' => $data['timezone'] ?? 'UTC', 'locale' => $data['locale'] ?? 'en', 'maintenance' => (bool) ($data['maintenance'] ?? false)], 'is_public' => false],
+            ['group' => 'system', 'value' => ['timezone' => $data['timezone'] ?? 'America/Bogota', 'locale' => $data['locale'] ?? 'es', 'maintenance' => (bool) ($data['maintenance'] ?? false)], 'is_public' => false],
         );
 
         Setting::query()->updateOrCreate(
@@ -63,28 +63,65 @@ class SettingController extends Controller
             ['group' => 'seo', 'value' => ['title' => $data['seo_title'] ?? null, 'description' => $data['seo_description'] ?? null], 'is_public' => true],
         );
 
+        $existingChrome = Setting::query()->where('key', 'site.chrome')->first()?->value ?? [];
+
         Setting::query()->updateOrCreate(
             ['key' => 'site.chrome'],
             ['group' => 'theme', 'value' => [
-                'header' => [
-                    'notice_label' => $data['header_notice_label'] ?? null,
-                    'notice_text' => $data['header_notice_text'] ?? null,
-                    'cta_label' => $data['header_cta_label'] ?? null,
-                    'cta_url' => $data['header_cta_url'] ?? null,
-                ],
-                'footer' => [
-                    'intro_title' => $data['footer_intro_title'] ?? null,
-                    'intro_body' => $data['footer_intro_body'] ?? null,
-                    'columns' => [
-                        ['title' => $data['footer_col_1_title'] ?? null, 'body' => $data['footer_col_1_body'] ?? null],
-                        ['title' => $data['footer_col_2_title'] ?? null, 'body' => $data['footer_col_2_body'] ?? null],
-                        ['title' => $data['footer_col_3_title'] ?? null, 'body' => $data['footer_col_3_body'] ?? null],
-                    ],
-                    'bottom_text' => $data['footer_bottom_text'] ?? null,
-                ],
+                'header' => array_merge((array) data_get($existingChrome, 'header', []), [
+                    'advanced_html' => $data['header_advanced_html'] ?? null,
+                ]),
+                'footer' => array_merge((array) data_get($existingChrome, 'footer', []), [
+                    'advanced_html' => $data['footer_advanced_html'] ?? null,
+                ]),
             ], 'is_public' => true],
         );
 
-        return back()->with('success', 'Settings updated.');
+        if ($request->user()) {
+            $request->session()->put('atlas.locale', $data['locale'] ?? 'es');
+        }
+
+        return back()->with('success', 'Configuración actualizada correctamente.');
+    }
+
+    protected function renderHeaderHtml(array $identity): string
+    {
+        $brand = e($identity['name'] ?? 'Atlas CMS');
+        $tagline = e($identity['tagline'] ?? 'Operaciones de contenido modernas');
+
+        return <<<HTML
+<header class="border-b border-slate-200/80 bg-white/80 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <a href="/" class="flex items-center gap-3">
+            <img src="/atlas-cms-logo.png" alt="Atlas CMS" class="h-12 w-auto rounded-2xl object-contain" />
+            <div>
+                <div class="text-sm font-semibold text-slate-900">{$brand}</div>
+                <div class="text-xs text-slate-500">{$tagline}</div>
+            </div>
+        </a>
+        <nav class="hidden items-center gap-6 text-sm md:flex">
+            <a href="/" class="text-slate-600 transition hover:text-slate-950">Home</a>
+            <a href="/login" class="rounded-full border border-slate-300 px-4 py-2 font-medium text-slate-700 transition hover:bg-slate-950 hover:text-white">Admin</a>
+        </nav>
+    </div>
+</header>
+HTML;
+    }
+
+    protected function renderFooterHtml(array $identity): string
+    {
+        $brand = e($identity['name'] ?? 'Atlas CMS');
+        $tagline = e($identity['tagline'] ?? 'Contenido, men?s, media y publicaciones gestionadas desde Atlas CMS.');
+
+        return <<<HTML
+<footer class="border-t border-slate-200 bg-slate-950 text-slate-200">
+    <div class="mx-auto max-w-6xl px-6 py-12">
+        <div class="flex flex-col gap-2 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
+            <p>{$brand}</p>
+            <p>{$tagline}</p>
+        </div>
+    </div>
+</footer>
+HTML;
     }
 }

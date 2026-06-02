@@ -1,0 +1,26 @@
+{
+  "name": "Atlas Forge Editor",
+  "slug": "atlas-forge-editor",
+  "version": "1.0.0",
+  "description": "Editor WYSIWYG modular para Atlas CMS inspirado en TinyMCE, construido desde cero con React, comandos nativos del navegador, sanitización y soporte para media, tablas, código, vista previa y HTML.",
+  "provider": "Modules\\Plugins\\AtlasForgeEditor\\PluginServiceProvider",
+  "author": "Atlas CMS - Robison Ñañez Vivas",
+  "requires": [],
+  "hooks": [
+    "editor.register",
+    "editor.assets",
+    "content.before_save",
+    "settings.register",
+    "admin.navigation.register"
+  ],
+  "settings_schema": [
+    { "key": "enabled", "label": "Activar Atlas Forge Editor", "type": "boolean", "default": true },
+    { "key": "default_height", "label": "Altura por defecto", "type": "number", "default": 560 },
+    { "key": "sticky_toolbar", "label": "Barra fija", "type": "boolean", "default": true },
+    { "key": "allow_html_mode", "label": "Permitir modo HTML", "type": "boolean", "default": true },
+    { "key": "allow_tables", "label": "Permitir tablas", "type": "boolean", "default": true },
+    { "key": "allow_media", "label": "Permitir biblioteca multimedia", "type": "boolean", "default": true },
+    { "key": "sanitize_on_save", "label": "Sanitizar HTML al guardar", "type": "boolean", "default": true },
+    { "key": "content_css", "label": "CSS del contenido", "type": "textarea", "default": "body{font-family:Inter,system-ui,sans-serif;line-height:1.65;color:#111827;} img{max-width:100%;height:auto;} table{width:100%;border-collapse:collapse;} td,th{border:1px solid #d1d5db;padding:.5rem;}" }
+  ]
+}

@@ -20,9 +20,11 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $navigation = [];
+        $locale = app()->getLocale() === 'en' ? 'en' : 'es';
 
         if ($user) {
             $rows = Menu::query()
+                ->with('modulo')
                 ->where('cesdo', true)
                 ->whereHas('modulo', fn ($query) => $query->where('activo', true))
                 ->orderBy('idModulos')
@@ -74,16 +76,16 @@ class HandleInertiaRequests extends Middleware
                 return $user->can($item->permission_name);
             });
 
-            $tree = $allowed
+            $navigation = $allowed
                 ->whereNull('id_menu')
-                ->map(function (Menu $item) use ($allowed) {
+                ->map(function (Menu $item) use ($allowed, $locale) {
                     $children = $allowed
                         ->where('id_menu', $item->id)
                         ->sortBy(fn (Menu $menu) => $menu->orden ?? 9999)
                         ->values()
                         ->map(fn (Menu $menu) => [
                             'id' => $menu->id,
-                            'label' => $menu->nombre,
+                            'label' => $menu->labelFor($locale),
                             'href' => $menu->url,
                             'icon' => $menu->icono,
                         ])
@@ -91,12 +93,13 @@ class HandleInertiaRequests extends Middleware
 
                     return [
                         'id' => $item->id,
-                        'label' => $item->nombre,
+                        'label' => $item->labelFor($locale),
                         'href' => $item->url,
                         'icon' => $item->icono,
                         'children' => $children,
                     ];
-                })->filter(function (array $item) {
+                })
+                ->filter(function (array $item) {
                     $href = (string) ($item['href'] ?? '');
                     $hasChildren = ! empty($item['children']);
 
@@ -104,8 +107,6 @@ class HandleInertiaRequests extends Middleware
                 })
                 ->values()
                 ->all();
-
-            $navigation = collect($tree)->values()->all();
         }
 
         return [
@@ -118,6 +119,13 @@ class HandleInertiaRequests extends Middleware
             ],
             'navigation' => $navigation,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'locale' => [
+                'current' => $locale,
+                'available' => [
+                    ['label' => 'Español', 'value' => 'es'],
+                    ['label' => 'English', 'value' => 'en'],
+                ],
+            ],
         ];
     }
 }

@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Http\Controllers\Controller;
+use App\Models\Media;
+use App\Models\MediaDirectory;
 use App\Models\Page;
+use App\Models\Post;
 use App\Models\Revision;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -31,6 +35,8 @@ class PageController extends Controller
         return Inertia::render('admin/pages/form', [
             'page' => null,
             'revisions' => [],
+            'editorMedia' => $this->editorMediaPayload(),
+            'latestPostsPreview' => $this->latestPostsPreview(),
         ]);
     }
 
@@ -42,7 +48,7 @@ class PageController extends Controller
 
         $this->storeRevision($page, $request);
 
-        return redirect()->route('admin.pages.index')->with('success', 'Page created.');
+        return redirect()->route('admin.pages.index')->with('success', 'Página creada correctamente.');
     }
 
     public function edit(Page $page): Response
@@ -62,6 +68,8 @@ class PageController extends Controller
                     'created_at' => $revision->created_at?->toIso8601String(),
                     'author_name' => $revision->author?->name,
                 ]),
+            'editorMedia' => $this->editorMediaPayload(),
+            'latestPostsPreview' => $this->latestPostsPreview(),
         ]);
     }
 
@@ -70,14 +78,14 @@ class PageController extends Controller
         $page->update($this->payload($request));
         $this->storeRevision($page, $request);
 
-        return redirect()->route('admin.pages.index')->with('success', 'Page updated.');
+        return redirect()->route('admin.pages.index')->with('success', 'Página actualizada correctamente.');
     }
 
     public function destroy(Page $page): RedirectResponse
     {
         $page->delete();
 
-        return redirect()->route('admin.pages.index')->with('success', 'Page deleted.');
+        return redirect()->route('admin.pages.index')->with('success', 'Página eliminada correctamente.');
     }
 
     public function restoreRevision(Request $request, Page $page, Revision $revision): RedirectResponse
@@ -104,7 +112,7 @@ class PageController extends Controller
 
         $this->storeRevision($page, $request);
 
-        return back()->with('success', 'Page restored from revision.');
+        return back()->with('success', 'La página se restauró desde la revisión seleccionada.');
     }
 
     protected function payload(Request $request): array
@@ -151,5 +159,51 @@ class PageController extends Controller
             'snapshot' => $page->fresh()->only(['title', 'slug', 'status', 'template', 'excerpt', 'content_json', 'seo_title', 'seo_description']),
             'author_id' => $request->user()?->id,
         ]);
+    }
+
+    protected function editorMediaPayload(): array
+    {
+        return [
+            'directories' => MediaDirectory::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
+                ->map(fn (MediaDirectory $directory) => [
+                    'id' => $directory->id,
+                    'name' => $directory->name,
+                    'slug' => $directory->slug,
+                ])
+                ->values(),
+            'assets' => Media::query()
+                ->with('directory')
+                ->where('mime_type', 'like', 'image/%')
+                ->latest()
+                ->get()
+                ->map(fn (Media $media) => [
+                    'id' => $media->id,
+                    'title' => $media->title ?: $media->filename,
+                    'alt' => $media->alt_text ?: $media->title ?: $media->filename,
+                    'url' => $media->metadata['url'] ?? Storage::disk($media->disk)->url($media->path),
+                    'directory_id' => $media->directory?->id,
+                    'directory_name' => $media->directory?->name,
+                ])
+                ->values(),
+        ];
+    }
+
+    protected function latestPostsPreview(): array
+    {
+        return Post::query()
+            ->published()
+            ->latest('published_at')
+            ->take(6)
+            ->get(['id', 'title', 'slug', 'excerpt'])
+            ->map(fn (Post $post) => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+            ])
+            ->values()
+            ->all();
     }
 }

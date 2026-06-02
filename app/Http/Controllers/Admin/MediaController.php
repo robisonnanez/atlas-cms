@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +18,15 @@ class MediaController extends Controller
     public function index(): Response
     {
         return Inertia::render('admin/media/index', [
-            'media' => Media::query()->with('directory')->latest()->get(),
+            'media' => Media::query()
+                ->with('directory')
+                ->latest()
+                ->get()
+                ->map(fn (Media $media) => [
+                    ...$media->toArray(),
+                    'preview_url' => $this->previewUrl(Storage::disk($media->disk)->url($media->path)),
+                ])
+                ->values(),
             'directories' => MediaDirectory::query()->withCount('media')->orderBy('name')->get(),
         ]);
     }
@@ -47,13 +56,13 @@ class MediaController extends Controller
             'title' => $data['title'] ?? $file->getClientOriginalName(),
             'alt_text' => $data['alt_text'] ?? null,
             'metadata' => [
-                'url' => Storage::disk('public')->url($path),
+                'url' => $this->previewUrl(Storage::disk('public')->url($path)),
                 'directory' => $directory?->slug,
             ],
             'uploaded_by' => $request->user()?->id,
         ]);
 
-        return back()->with('success', 'Media uploaded.');
+        return back()->with('success', 'Archivo multimedia cargado correctamente.');
     }
 
     public function update(Request $request, Media $medium): RedirectResponse
@@ -64,14 +73,15 @@ class MediaController extends Controller
             'directory_id' => ['nullable', 'exists:media_directories,id'],
         ]));
 
+        $medium->refresh();
         $medium->update([
             'metadata' => array_merge($medium->metadata ?? [], [
                 'directory' => $medium->directory?->slug,
-                'url' => ($medium->metadata['url'] ?? null) ?: Storage::disk($medium->disk)->url($medium->path),
+                'url' => $this->previewUrl(Storage::disk($medium->disk)->url($medium->path)),
             ]),
         ]);
 
-        return back()->with('success', 'Media updated.');
+        return back()->with('success', 'Metadata actualizada correctamente.');
     }
 
     public function storeDirectory(Request $request): RedirectResponse
@@ -97,18 +107,32 @@ class MediaController extends Controller
             'created_by' => $request->user()?->id,
         ]);
 
-        return back()->with('success', 'Directory created.');
+        return back()->with('success', 'Directorio creado correctamente.');
     }
 
     public function destroyDirectory(MediaDirectory $directory): RedirectResponse
     {
         if ($directory->media()->exists()) {
-            return back()->with('error', 'The directory still contains files. Move or delete them first.');
+            return back()->with('error', 'El directorio todavía contiene archivos. Muévelos o elimínalos primero.');
         }
 
         $directory->delete();
 
-        return back()->with('success', 'Directory deleted.');
+        return back()->with('success', 'Directorio eliminado correctamente.');
+    }
+
+    protected function previewUrl(string $url): string
+    {
+        $parts = parse_url($url);
+
+        if (is_array($parts) && isset($parts['path'])) {
+            $path = $parts['path'];
+            $query = Arr::exists($parts, 'query') ? ('?'.$parts['query']) : '';
+
+            return $path.$query;
+        }
+
+        return $url;
     }
 
     public function destroy(Media $medium): RedirectResponse
@@ -119,6 +143,6 @@ class MediaController extends Controller
 
         $medium->delete();
 
-        return back()->with('success', 'Media deleted.');
+        return back()->with('success', 'Archivo multimedia eliminado correctamente.');
     }
 }
