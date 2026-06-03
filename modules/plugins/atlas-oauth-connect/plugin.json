@@ -1,0 +1,40 @@
+{
+  "name": "Atlas OAuth Connect",
+  "slug": "atlas-oauth-connect",
+  "version": "1.0.0",
+  "description": "Permite iniciar sesión en Atlas CMS con Google/Gmail mediante OAuth2. Esta V1.0.0 se enfoca únicamente en Google para facilitar pruebas controladas.",
+  "provider": "Modules\\Plugins\\AtlasOAuthConnect\\PluginServiceProvider",
+  "author": "Atlas CMS - Robison Ñañez Vivas",
+  "requires": [],
+  "hooks": [
+    "auth.login.render",
+    "settings.register",
+    "admin.navigation.register"
+  ],
+  "settings_schema": [
+    {
+      "key": "google_enabled",
+      "label": "Activar Google/Gmail",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "key": "google_client_id",
+      "label": "Google Client ID",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "key": "google_client_secret",
+      "label": "Google Client Secret",
+      "type": "password",
+      "default": ""
+    },
+    {
+      "key": "allow_auto_register",
+      "label": "Permitir registro automático",
+      "type": "boolean",
+      "default": true
+    }
+  ]
+}

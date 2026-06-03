@@ -140,13 +140,24 @@ export default function PluginsIndex({ plugins, discovered }: { plugins: PluginR
                                         <div className="flex items-center justify-between"><span>Hooks</span><span className="font-medium text-slate-900">{plugin.settings?.hooks?.length ?? 0}</span></div>
                                         <div className="flex items-center justify-between"><span>Campos de ajuste</span><span className="font-medium text-slate-900">{plugin.settings?.settings_schema?.length ?? 0}</span></div>
                                     </div>
-                                    <Button
-                                        label={plugin.is_active ? 'Desactivar' : 'Activar'}
-                                        icon={plugin.is_active ? 'pi pi-pause-circle' : 'pi pi-play-circle'}
-                                        severity={plugin.is_active ? 'secondary' : 'contrast'}
-                                        onClick={() => router.post(`/admin/plugins/${plugin.id}/toggle`)}
-                                        className="w-full rounded-full"
-                                    />
+                                    <div className="grid gap-3">
+                                        {plugin.slug === 'atlas-oauth-connect' ? (
+                                            <Button
+                                                label="Configurar OAuth"
+                                                icon="pi pi-cog"
+                                                severity="info"
+                                                onClick={() => router.visit('/admin/plugins/atlas-oauth-connect')}
+                                                className="w-full rounded-full"
+                                            />
+                                        ) : null}
+                                        <Button
+                                            label={plugin.is_active ? 'Desactivar' : 'Activar'}
+                                            icon={plugin.is_active ? 'pi pi-pause-circle' : 'pi pi-play-circle'}
+                                            severity={plugin.is_active ? 'secondary' : 'contrast'}
+                                            onClick={() => router.post(`/admin/plugins/${plugin.id}/toggle`)}
+                                            className="w-full rounded-full"
+                                        />
+                                    </div>
                                 </CardContent>
                             </Card>
                         ))}

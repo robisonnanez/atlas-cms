@@ -26,7 +26,7 @@ class ContentRenderer implements ContentRendererContract
             'heading' => sprintf('<h2 class="atlas-prose-heading">%s</h2>', e($data['text'] ?? '')),
             'image' => sprintf('<figure><img src="%s" alt="%s" class="atlas-prose-image" /></figure>', e($data['url'] ?? ''), e($data['alt'] ?? '')),
             'video' => sprintf('<div class="atlas-embed"><iframe src="%s" loading="lazy" allowfullscreen></iframe></div>', e($data['url'] ?? '')),
-            'button' => sprintf('<p><a href="%s" class="atlas-button">%s</a></p>', e($data['url'] ?? '#'), e($data['label'] ?? 'Acci?n')),
+            'button' => sprintf('<p><a href="%s" class="atlas-button">%s</a></p>', e($data['url'] ?? '#'), e($data['label'] ?? 'Acción')),
             'columns' => $this->renderColumns($data['columns'] ?? []),
             'embed' => $this->renderEmbed($data),
             'html' => $this->sanitizeHtml((string) ($data['html'] ?? '')),
@@ -86,7 +86,7 @@ class ContentRenderer implements ContentRendererContract
         $items = $this->resolveMediaItems($data, 8);
 
         if ($items->isEmpty()) {
-            return '<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">Configura un directorio o selecciona im?genes para este carrusel.</div>';
+            return '<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">Configura un directorio o selecciona imágenes para este carrusel.</div>';
         }
 
         $title = e((string) ($data['title'] ?? 'Carrusel principal'));
@@ -110,10 +110,10 @@ class ContentRenderer implements ContentRendererContract
         $items = $this->resolveMediaItems($data, 18);
 
         if ($items->isEmpty()) {
-            return '<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">Configura un directorio o selecciona im?genes para esta galer?a.</div>';
+            return '<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">Configura un directorio o selecciona imágenes para esta galería.</div>';
         }
 
-        $title = e((string) ($data['title'] ?? 'Galer?a de im?genes'));
+        $title = e((string) ($data['title'] ?? 'Galería de imágenes'));
 
         $cards = $items->map(function (Media $media): string {
             $url = Storage::disk($media->disk)->url($media->path);
@@ -130,12 +130,12 @@ class ContentRenderer implements ContentRendererContract
         $items = Post::query()->published()->latest('published_at')->take($limit)->get();
 
         if ($items->isEmpty()) {
-            return '<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">Todav?a no hay publicaciones para mostrar.</div>';
+            return '<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">Todavía no hay publicaciones para mostrar.</div>';
         }
 
         $title = e((string) ($data['title'] ?? 'Novedades recientes'));
         $cards = $items->map(function (Post $post): string {
-            return sprintf('<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"><h3 class="text-xl font-semibold text-slate-950">%s</h3><p class="mt-3 text-sm text-slate-600">%s</p><a href="/blog/%s" class="mt-6 inline-flex text-sm font-medium text-blue-600">Leer art?culo</a></article>', e($post->title), e($post->excerpt ?? ''), e($post->slug));
+            return sprintf('<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"><h3 class="text-xl font-semibold text-slate-950">%s</h3><p class="mt-3 text-sm text-slate-600">%s</p><a href="/blog/%s" class="mt-6 inline-flex text-sm font-medium text-blue-600">Leer artículo</a></article>', e($post->title), e($post->excerpt ?? ''), e($post->slug));
         })->implode('');
 
         return sprintf('<section class="space-y-8"><div><p class="text-sm uppercase tracking-[0.35em] text-slate-400">Blog</p><h2 class="mt-2 text-3xl font-semibold text-slate-950">%s</h2></div><div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">%s</div></section>', $title, $cards);

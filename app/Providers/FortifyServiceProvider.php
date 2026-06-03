@@ -4,28 +4,25 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\Plugin;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Throwable;
 
 class FortifyServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $this->configureActions();
@@ -33,18 +30,12 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
     }
 
-    /**
-     * Configure Fortify actions.
-     */
     private function configureActions(): void
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
     }
 
-    /**
-     * Configure Fortify views.
-     */
     private function configureViews(): void
     {
         Fortify::loginView(function (Request $request) {
@@ -55,6 +46,7 @@ class FortifyServiceProvider extends ServiceProvider
                 'canResetPassword' => Features::enabled(Features::resetPasswords()),
                 'canRegister' => Features::enabled(Features::registration()),
                 'status' => $request->session()->get('status'),
+                'oauthProviders' => $this->resolveOAuthProviders(),
             ]);
         });
 
@@ -78,9 +70,37 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
     }
 
-    /**
-     * Configure rate limiting.
-     */
+    private function resolveOAuthProviders(): array
+    {
+        try {
+            if (! Schema::hasTable('plugins')) {
+                return [];
+            }
+
+            $pluginActive = Plugin::query()
+                ->where('slug', 'atlas-oauth-connect')
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $pluginActive) {
+                return [];
+            }
+
+            $registry = \Modules\Plugins\AtlasOAuthConnect\Support\OAuthProviderRegistry::enabled();
+
+            return collect($registry)
+                ->map(fn (array $provider, string $key) => [
+                    'key' => $key,
+                    'label' => $provider['label'],
+                    'redirect_url' => url("/auth/oauth/{$key}/redirect"),
+                ])
+                ->values()
+                ->all();
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
     private function configureRateLimiting(): void
     {
         RateLimiter::for('two-factor', function (Request $request) {

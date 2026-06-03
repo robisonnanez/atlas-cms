@@ -47,7 +47,7 @@ class SeedInstitutionalDemo extends Command
                         ['title' => 'Horario', 'body' => "Lunes a viernes\n7:00 a.m. - 4:00 p.m."],
                         ['title' => 'Servicios', 'body' => "Noticias institucionales\nConvocatorias\nRecursos para la comunidad"],
                     ],
-                    'bottom_text' => 'Contenido, men?s, media y publicaciones administradas desde Atlas CMS.',
+                    'bottom_text' => 'Contenido, menús, media y publicaciones administradas desde Atlas CMS.',
                 ],
             ], 'is_public' => true]);
 

@@ -52,7 +52,7 @@ class NavigationAdminController extends Controller
             'activo' => (bool) ($data['activo'] ?? true),
         ]);
 
-        return back()->with('success', 'M?dulo creado correctamente.');
+        return back()->with('success', 'Módulo creado correctamente.');
     }
 
     public function updateModule(Request $request, Modulo $modulo): RedirectResponse
@@ -78,18 +78,18 @@ class NavigationAdminController extends Controller
             'activo' => (bool) ($data['activo'] ?? true),
         ]);
 
-        return back()->with('success', 'M?dulo actualizado.');
+        return back()->with('success', 'Módulo actualizado.');
     }
 
     public function destroyModule(Modulo $modulo): RedirectResponse
     {
         if ($modulo->menus()->exists()) {
-            return back()->with('error', 'No se puede eliminar el m?dulo porque tiene menús asociados.');
+            return back()->with('error', 'No se puede eliminar el módulo porque tiene menús asociados.');
         }
 
         $modulo->delete();
 
-        return back()->with('success', 'M?dulo eliminado.');
+        return back()->with('success', 'Módulo eliminado.');
     }
 
     public function storeMenu(Request $request, PermissionSyncService $syncService): RedirectResponse
@@ -121,7 +121,7 @@ class NavigationAdminController extends Controller
 
         $syncService->syncFromMenu();
 
-        return back()->with('success', 'Men? creado correctamente.');
+        return back()->with('success', 'Menú creado correctamente.');
     }
 
     public function updateMenu(Request $request, Menu $menu, PermissionSyncService $syncService): RedirectResponse
@@ -153,7 +153,7 @@ class NavigationAdminController extends Controller
 
         $syncService->syncFromMenu();
 
-        return back()->with('success', 'Men? actualizado.');
+        return back()->with('success', 'Menú actualizado.');
     }
 
     public function destroyMenu(Menu $menu): RedirectResponse
@@ -164,7 +164,7 @@ class NavigationAdminController extends Controller
 
         $menu->delete();
 
-        return back()->with('success', 'Men? eliminado.');
+        return back()->with('success', 'Menú eliminado.');
     }
 
     protected function normalizeTranslations(array $translations, ?string $fallback): array

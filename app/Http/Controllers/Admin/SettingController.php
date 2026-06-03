@@ -111,7 +111,7 @@ HTML;
     protected function renderFooterHtml(array $identity): string
     {
         $brand = e($identity['name'] ?? 'Atlas CMS');
-        $tagline = e($identity['tagline'] ?? 'Contenido, men?s, media y publicaciones gestionadas desde Atlas CMS.');
+        $tagline = e($identity['tagline'] ?? 'Contenido, menús, media y publicaciones gestionadas desde Atlas CMS.');
 
         return <<<HTML
 <footer class="border-t border-slate-200 bg-slate-950 text-slate-200">
