@@ -33,8 +33,6 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-            "Modules\\Plugins\\AtlasForgeEditor\\": "modules/plugins/atlas-forge-editor/src/",
-            "Modules\\Plugins\\AtlasOAuthConnect\\": "modules/plugins/atlas-oauth-connect/src/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

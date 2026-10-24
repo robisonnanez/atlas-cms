@@ -3,6 +3,7 @@
 namespace App\Support\Cms;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -10,22 +11,71 @@ use ZipArchive;
 
 class ExtensionArchiveInstaller
 {
+    public function __construct(
+        protected ?PluginAutoloader $autoloader = null,
+        protected ?CmsHookManager $hooks = null,
+        protected ?PluginManager $pluginManager = null,
+        protected ?ThemeManager $themeManager = null,
+    ) {
+        $this->autoloader = $autoloader ?? app(PluginAutoloader::class);
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
+        $this->pluginManager = $pluginManager ?? app(PluginManager::class);
+        $this->themeManager = $themeManager ?? app(ThemeManager::class);
+    }
+
     public function installPluginArchive(UploadedFile $archive): array
     {
-        return $this->installArchive(
+        $result = $this->installArchive(
             archive: $archive,
             manifestName: 'plugin.json',
-            destinationRoot: config('atlas.plugin_path'),
+            destinationRoot: config('atlas.plugin_path', base_path('modules/plugins')),
         );
+
+        $targetPath = $result['target_path'];
+        $slug = $result['slug'];
+        $manifest = $result['manifest'];
+
+        // Registrar inmediatamente el autoloader PSR-4 para el nuevo plugin
+        $this->autoloader->registerPluginDirectory($targetPath);
+
+        // Si el plugin incluye migraciones, ejecutarlas
+        $migrationsPath = $targetPath.'/database/migrations';
+        if (File::isDirectory($migrationsPath)) {
+            $relativePath = str_replace(base_path().'/', '', $migrationsPath);
+            Artisan::call('migrate', [
+                '--path' => $relativePath,
+                '--force' => true,
+            ]);
+        }
+
+        // Sincronizar en base de datos
+        $this->pluginManager->syncDiscovered();
+
+        // Disparar hook de instalación de plugin
+        $this->hooks->doAction('plugin.installed', $slug, $targetPath, $manifest);
+
+        return $result;
     }
 
     public function installThemeArchive(UploadedFile $archive): array
     {
-        return $this->installArchive(
+        $result = $this->installArchive(
             archive: $archive,
             manifestName: 'theme.json',
             destinationRoot: resource_path('views/themes'),
         );
+
+        $targetPath = $result['target_path'];
+        $slug = $result['slug'];
+        $manifest = $result['manifest'];
+
+        // Sincronizar en base de datos
+        $this->themeManager->syncDiscovered();
+
+        // Disparar hook de instalación de tema
+        $this->hooks->doAction('theme.installed', $slug, $targetPath, $manifest);
+
+        return $result;
     }
 
     protected function installArchive(UploadedFile $archive, string $manifestName, string $destinationRoot): array
@@ -39,7 +89,7 @@ class ExtensionArchiveInstaller
         File::ensureDirectoryExists($extractPath);
 
         try {
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             $status = $zip->open($archive->getRealPath());
 
             if ($status !== true) {
