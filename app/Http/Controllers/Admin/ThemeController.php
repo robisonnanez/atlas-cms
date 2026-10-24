@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Theme;
+use App\Support\Cms\CmsHookManager;
 use App\Support\Cms\ExtensionArchiveInstaller;
 use App\Support\Cms\ThemeManager;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,9 @@ class ThemeController extends Controller
     public function __construct(
         protected ThemeManager $themes,
         protected ExtensionArchiveInstaller $installer,
+        protected ?CmsHookManager $hooks = null,
     ) {
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
     }
 
     public function index(): Response
@@ -48,6 +51,8 @@ class ThemeController extends Controller
             Theme::query()->update(['is_active' => false]);
             $theme->update(['is_active' => true]);
         });
+
+        $this->hooks->doAction('theme.activated', $theme);
 
         return back()->with('success', 'Tema activado correctamente.');
     }

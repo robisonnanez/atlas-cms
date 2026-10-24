@@ -5,11 +5,27 @@ type SiteMenuItem = { id: number; label: string; url: string; target?: string | 
 type ChromeHeader = { advanced_html?: string };
 type ChromeFooter = { advanced_html?: string };
 
+type SiteThemePayload = {
+    id?: number;
+    name?: string;
+    slug?: string;
+    version?: string;
+    author?: string;
+    settings?: {
+        accent?: string;
+        surface?: string;
+        [key: string]: unknown;
+    };
+    zones?: string[];
+    templates?: string[];
+};
+
 type SiteLayoutProps = {
     title?: string;
     site: {
         identity?: { name?: string; tagline?: string };
         chrome?: { header?: ChromeHeader; footer?: ChromeFooter; header_html?: string; footer_html?: string };
+        theme?: SiteThemePayload;
         locale?: string;
     };
     menu?: SiteMenuItem[];
@@ -99,11 +115,15 @@ export default function SiteLayout({ title, site, menu = [], children }: SiteLay
     const chrome = site.chrome ?? {};
     const header = chrome.header;
     const footer = chrome.footer;
+    const themeAccent = site.theme?.settings?.accent as string | undefined;
 
     return (
         <>
             <Head title={title ?? brand} />
-            <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#eff6ff,_#f8fafc_35%,_#ffffff_100%)] text-slate-900">
+            <div
+                className="min-h-screen bg-[radial-gradient(circle_at_top,_#eff6ff,_#f8fafc_35%,_#ffffff_100%)] text-slate-900"
+                style={{ '--atlas-accent': themeAccent ?? '#2563eb' } as React.CSSProperties}
+            >
                 {header?.advanced_html ? (
                     <div dangerouslySetInnerHTML={{ __html: header.advanced_html }} />
                 ) : chrome.header_html ? (
