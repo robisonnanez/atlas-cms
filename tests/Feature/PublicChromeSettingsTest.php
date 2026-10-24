@@ -57,7 +57,6 @@ it('renders structured header and footer content from public settings', function
         ->assertSee('Administrado desde Atlas CMS.');
 });
 
-
 it('prioritizes advanced header and footer html when provided', function () {
     Setting::query()->create([
         'group' => 'general',

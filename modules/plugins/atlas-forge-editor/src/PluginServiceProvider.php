@@ -11,23 +11,23 @@ class PluginServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(AtlasForgeEditor::class, fn () => new AtlasForgeEditor());
+        $this->app->singleton(AtlasForgeEditor::class, fn () => new AtlasForgeEditor);
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/atlas-forge-editor.php', 'atlas-forge-editor');
+        $this->mergeConfigFrom(__DIR__.'/../config/atlas-forge-editor.php', 'atlas-forge-editor');
     }
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'atlas-forge-editor');
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'atlas-forge-editor');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->publishes([
-            __DIR__ . '/../resources/js' => resource_path('js/plugins/atlas-forge-editor'),
-            __DIR__ . '/../resources/css' => resource_path('css/plugins/atlas-forge-editor'),
+            __DIR__.'/../resources/js' => resource_path('js/plugins/atlas-forge-editor'),
+            __DIR__.'/../resources/css' => resource_path('css/plugins/atlas-forge-editor'),
         ], 'atlas-forge-editor-assets');
 
         Blade::directive('atlasForgeEditorAssets', function () {
-            return "<?php echo app(\\Modules\\Plugins\\AtlasForgeEditor\\Support\\AtlasForgeEditor::class)->assetsHtml(); ?>";
+            return '<?php echo app(\\Modules\\Plugins\\AtlasForgeEditor\\Support\\AtlasForgeEditor::class)->assetsHtml(); ?>';
         });
 
         $this->registerRoutes();
@@ -36,11 +36,11 @@ class PluginServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-        if (file_exists(__DIR__ . '/../routes/admin.php')) {
+        if (file_exists(__DIR__.'/../routes/admin.php')) {
             Route::middleware(['web', 'auth'])
                 ->prefix('admin/plugins/atlas-forge-editor')
                 ->name('admin.plugins.atlas-forge-editor.')
-                ->group(__DIR__ . '/../routes/admin.php');
+                ->group(__DIR__.'/../routes/admin.php');
         }
     }
 

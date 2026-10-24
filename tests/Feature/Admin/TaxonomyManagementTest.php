@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\Category;
 use App\Models\Permission;
-use App\Models\Tag;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 

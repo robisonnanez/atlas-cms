@@ -32,7 +32,6 @@ Route::any('register', static function () {
 Route::get('/auth/error', static fn () => inertia('auth/error'))->name('auth.error');
 Route::get('/auth/access', static fn () => inertia('auth/access'))->name('auth.access');
 
-
 Route::post('/locale', function (Request $request) {
     $data = $request->validate([
         'locale' => ['required', 'in:es,en'],

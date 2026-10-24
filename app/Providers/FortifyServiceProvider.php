@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Modules\Plugins\AtlasOAuthConnect\Support\OAuthProviderRegistry;
 use Throwable;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -86,7 +87,7 @@ class FortifyServiceProvider extends ServiceProvider
                 return [];
             }
 
-            $registry = \Modules\Plugins\AtlasOAuthConnect\Support\OAuthProviderRegistry::enabled();
+            $registry = OAuthProviderRegistry::enabled();
 
             return collect($registry)
                 ->map(fn (array $provider, string $key) => [

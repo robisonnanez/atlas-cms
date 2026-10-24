@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Models\User;
 use App\Support\Cms\InstallStateStore;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,8 +17,7 @@ class InstallController extends Controller
 {
     public function __construct(
         protected InstallStateStore $installStateStore,
-    ) {
-    }
+    ) {}
 
     public function welcome(): Response|RedirectResponse
     {
@@ -70,7 +70,7 @@ class InstallController extends Controller
         DB::transaction(function () use ($data): void {
             $role = Role::findOrCreate('super-admin', 'web');
 
-            $user = \App\Models\User::query()->updateOrCreate(
+            $user = User::query()->updateOrCreate(
                 ['email' => $data['email']],
                 [
                     'name' => $data['name'],

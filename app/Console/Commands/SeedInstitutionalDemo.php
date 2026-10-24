@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 class SeedInstitutionalDemo extends Command
 {
     protected $signature = 'atlas:seed-institutional-demo';
+
     protected $description = 'Carga una demo institucional tipo colegio con paginas, menu, media y portada publica.';
 
     public function handle(): int
@@ -26,6 +27,7 @@ class SeedInstitutionalDemo extends Command
         $user = User::query()->first();
         if (! $user) {
             $this->error('No existe ningun usuario para asociar el contenido demo.');
+
             return self::FAILURE;
         }
 
@@ -65,9 +67,13 @@ class SeedInstitutionalDemo extends Command
                 $path = 'atlas-media/'.$carouselDirectory->slug.'/'.$filename;
                 if (! Storage::disk('public')->exists($path)) {
                     $response = Http::timeout(20)->get($slide['url']);
-                    if ($response->successful()) Storage::disk('public')->put($path, $response->body());
+                    if ($response->successful()) {
+                        Storage::disk('public')->put($path, $response->body());
+                    }
                 }
-                if (! Storage::disk('public')->exists($path)) continue;
+                if (! Storage::disk('public')->exists($path)) {
+                    continue;
+                }
                 Media::query()->updateOrCreate(['path' => $path], ['directory_id' => $carouselDirectory->id, 'disk' => 'public', 'filename' => $filename, 'mime_type' => Storage::disk('public')->mimeType($path) ?: 'image/jpeg', 'extension' => $extension, 'size' => Storage::disk('public')->size($path) ?: 0, 'title' => $slide['title'], 'alt_text' => $slide['alt'], 'metadata' => ['url' => Storage::disk('public')->url($path), 'directory' => $carouselDirectory->slug], 'uploaded_by' => $user->id]);
             }
 
@@ -127,6 +133,7 @@ HTML;
         });
 
         $this->info('Demo institucional cargada correctamente en Atlas.');
+
         return self::SUCCESS;
     }
 }
