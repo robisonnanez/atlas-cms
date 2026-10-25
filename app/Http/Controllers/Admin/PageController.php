@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Http\Controllers\Controller;
+use App\Models\CustomField;
 use App\Models\Media;
 use App\Models\MediaDirectory;
 use App\Models\Page;
@@ -40,6 +41,7 @@ class PageController extends Controller
             'revisions' => [],
             'editorMedia' => $this->editorMediaPayload(),
             'latestPostsPreview' => $this->latestPostsPreview(),
+            'availableCustomFields' => CustomField::query()->active()->forTarget('page')->get(),
         ]);
     }
 
@@ -50,6 +52,10 @@ class PageController extends Controller
         $page = Page::query()->create($payload + [
             'author_id' => $request->user()?->id,
         ]);
+
+        if ($request->has('custom_fields')) {
+            $page->syncCustomFields($request->input('custom_fields', []));
+        }
 
         $this->storeRevision($page, $request);
 
@@ -64,6 +70,7 @@ class PageController extends Controller
             'page' => [
                 ...$page->toArray(),
                 'content_json' => $this->editableBlocks($page->content_json, $page->content_html),
+                'custom_fields' => $page->customFieldsPayload(),
             ],
             'revisions' => $page->revisions()
                 ->with('author:id,name')
@@ -77,6 +84,7 @@ class PageController extends Controller
                 ]),
             'editorMedia' => $this->editorMediaPayload(),
             'latestPostsPreview' => $this->latestPostsPreview(),
+            'availableCustomFields' => CustomField::query()->active()->forTarget('page')->get(),
         ]);
     }
 
@@ -85,6 +93,11 @@ class PageController extends Controller
         $payload = $this->hooks->applyFilters('admin.page.before_update', $this->payload($request), $page, $request);
 
         $page->update($payload);
+
+        if ($request->has('custom_fields')) {
+            $page->syncCustomFields($request->input('custom_fields', []));
+        }
+
         $this->storeRevision($page, $request);
 
         $this->hooks->doAction('admin.page.updated', $page, $request);
