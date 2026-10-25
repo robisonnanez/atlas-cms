@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\NavigationAdminController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\RedirectRuleController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TaxonomyController;
@@ -86,6 +88,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('menus/{menu}/items/tree', [MenuController::class, 'updateTree'])->middleware('permission:atlas.menus.reorder')->name('menus.items.tree');
         Route::put('menu-items/{item}', [MenuController::class, 'updateItem'])->middleware('permission:atlas.menus.edit')->name('menus.items.update');
 
+        Route::get('custom-fields', [CustomFieldController::class, 'index'])->name('custom-fields.index');
+        Route::post('custom-fields', [CustomFieldController::class, 'store'])->name('custom-fields.store');
+        Route::put('custom-fields/{customField}', [CustomFieldController::class, 'update'])->name('custom-fields.update');
+        Route::delete('custom-fields/{customField}', [CustomFieldController::class, 'destroy'])->name('custom-fields.destroy');
+
+        Route::get('redirects', [RedirectRuleController::class, 'index'])->name('redirects.index');
+        Route::post('redirects', [RedirectRuleController::class, 'store'])->name('redirects.store');
+        Route::put('redirects/{redirectRule}', [RedirectRuleController::class, 'update'])->name('redirects.update');
+        Route::delete('redirects/{redirectRule}', [RedirectRuleController::class, 'destroy'])->name('redirects.destroy');
+
         Route::get('themes', [ThemeController::class, 'index'])->middleware('permission:atlas.themes.view')->name('themes.index');
         Route::post('themes/install', [ThemeController::class, 'install'])->middleware('permission:atlas.themes.activate')->name('themes.install');
         Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->middleware('permission:atlas.themes.activate')->name('themes.activate');
@@ -121,6 +133,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
+Route::get('/search', [PublicSiteController::class, 'search'])->name('search');
 Route::get('/blog', [PublicSiteController::class, 'blog'])->name('blog.index');
 Route::get('/blog/{post:slug}', [PublicSiteController::class, 'post'])->name('blog.show');
 Route::get('/category/{category:slug}', [PublicSiteController::class, 'category'])->name('category.show');

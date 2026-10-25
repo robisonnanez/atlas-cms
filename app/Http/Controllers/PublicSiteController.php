@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Support\Cms\CmsHookManager;
 use App\Support\Cms\SeoMetadataBuilder;
 use App\Support\Cms\ThemeManager;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,6 +77,7 @@ class PublicSiteController extends Controller
             ...$post->toArray(),
             'content_json' => $post->content_json ?? [],
             'rendered_html' => $post->content_html ?: $this->renderer->render($post->content_json ?? []),
+            'custom_fields' => $post->customFieldsPayload(),
         ];
         $postPayload = $this->hooks->applyFilters('site.post_payload', $postPayload, $post);
         $this->hooks->doAction('site.post_viewed', $post);
@@ -110,6 +112,31 @@ class PublicSiteController extends Controller
         ]);
     }
 
+    public function search(Request $request): Response
+    {
+        $query = trim((string) $request->query('q', ''));
+
+        $posts = Post::query()
+            ->published()
+            ->when($query !== '', function ($builder) use ($query) {
+                $builder->where(function ($q) use ($query) {
+                    $q->where('title', 'like', "%{$query}%")
+                        ->orWhere('excerpt', 'like', "%{$query}%")
+                        ->orWhere('content_html', 'like', "%{$query}%");
+                });
+            })
+            ->latest('published_at')
+            ->paginate(12)
+            ->withQueryString();
+
+        return Inertia::render('site/blog-index', [
+            'site' => $this->siteProps(),
+            'menu' => $this->menus->resolve('primary'),
+            'posts' => $posts,
+            'title' => $query !== '' ? "Resultados para: {$query}" : 'Búsqueda de publicaciones',
+        ]);
+    }
+
     protected function siteProps(): array
     {
         $props = [
@@ -129,6 +156,7 @@ class PublicSiteController extends Controller
             ...$page->toArray(),
             'content_json' => $page->content_json ?? [],
             'rendered_html' => $page->content_html ?: $this->renderer->render($page->content_json ?? []),
+            'custom_fields' => $page->customFieldsPayload(),
         ];
     }
 
