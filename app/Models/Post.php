@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCustomFields;
 use App\Models\Concerns\HasPublishingState;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Post extends Model
 {
-    use HasPublishingState, LogsActivity;
+    use HasCustomFields, HasPublishingState, LogsActivity;
 
     protected $fillable = [
         'title',

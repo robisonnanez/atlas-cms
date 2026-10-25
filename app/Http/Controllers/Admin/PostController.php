@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\CustomField;
 use App\Models\Media;
 use App\Models\MediaDirectory;
 use App\Models\Post;
@@ -43,6 +44,7 @@ class PostController extends Controller
             'revisions' => [],
             'editorMedia' => $this->editorMediaPayload(),
             'latestPostsPreview' => $this->latestPostsPreview(),
+            'availableCustomFields' => CustomField::query()->active()->forTarget('post')->get(),
         ]);
     }
 
@@ -56,6 +58,11 @@ class PostController extends Controller
 
         $post->categories()->sync($request->input('category_ids', []));
         $post->tags()->sync($request->input('tag_ids', []));
+
+        if ($request->has('custom_fields')) {
+            $post->syncCustomFields($request->input('custom_fields', []));
+        }
+
         $this->storeRevision($post, $request);
 
         $this->hooks->doAction('admin.post.created', $post, $request);
@@ -71,6 +78,7 @@ class PostController extends Controller
             'post' => [
                 ...$post->toArray(),
                 'content_json' => $this->editableBlocks($post->content_json, $post->content_html),
+                'custom_fields' => $post->customFieldsPayload(),
             ],
             'categories' => Category::query()->orderBy('name')->get(),
             'tags' => Tag::query()->orderBy('name')->get(),
@@ -86,6 +94,7 @@ class PostController extends Controller
                 ]),
             'editorMedia' => $this->editorMediaPayload(),
             'latestPostsPreview' => $this->latestPostsPreview(),
+            'availableCustomFields' => CustomField::query()->active()->forTarget('post')->get(),
         ]);
     }
 
@@ -96,6 +105,11 @@ class PostController extends Controller
         $post->update($payload);
         $post->categories()->sync($request->input('category_ids', []));
         $post->tags()->sync($request->input('tag_ids', []));
+
+        if ($request->has('custom_fields')) {
+            $post->syncCustomFields($request->input('custom_fields', []));
+        }
+
         $this->storeRevision($post, $request);
 
         $this->hooks->doAction('admin.post.updated', $post, $request);
