@@ -29,7 +29,7 @@ class OAuthConfig
 
             return data_get($settings, $key, $default);
         } catch (Throwable) {
-            return cache()->get("settings.".static::SETTINGS_KEY.".{$key}", $default);
+            return cache()->get('settings.'.static::SETTINGS_KEY.".{$key}", $default);
         }
     }
 
@@ -49,7 +49,7 @@ class OAuthConfig
                 ],
             );
         } catch (Throwable) {
-            cache()->forever("settings.".static::SETTINGS_KEY.".{$key}", $value);
+            cache()->forever('settings.'.static::SETTINGS_KEY.".{$key}", $value);
         }
     }
 

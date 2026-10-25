@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plugin;
+use App\Support\Cms\CmsHookManager;
 use App\Support\Cms\ExtensionArchiveInstaller;
 use App\Support\Cms\PluginManager;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,9 @@ class PluginController extends Controller
     public function __construct(
         protected PluginManager $plugins,
         protected ExtensionArchiveInstaller $installer,
+        protected ?CmsHookManager $hooks = null,
     ) {
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
     }
 
     public function index(): Response
@@ -44,6 +47,9 @@ class PluginController extends Controller
     public function toggle(Plugin $plugin): RedirectResponse
     {
         $plugin->update(['is_active' => ! $plugin->is_active]);
+
+        $this->hooks->doAction('plugin.toggled', $plugin, $plugin->is_active);
+        $this->hooks->doAction($plugin->is_active ? 'plugin.activated' : 'plugin.deactivated', $plugin);
 
         return back()->with('success', $plugin->is_active ? 'Plugin activado correctamente.' : 'Plugin desactivado correctamente.');
     }

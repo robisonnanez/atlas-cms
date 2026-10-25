@@ -10,15 +10,31 @@ use Illuminate\Support\Str;
 
 class ContentRenderer implements ContentRendererContract
 {
+    public function __construct(
+        protected ?CmsHookManager $hooks = null,
+    ) {
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
+    }
+
     public function render(array $blocks): string
     {
-        return collect($blocks)
+        $blocks = $this->hooks->applyFilters('content.before_render', $blocks);
+
+        $html = collect($blocks)
             ->map(fn (array $block): string => $this->renderBlock($block))
             ->implode("\n");
+
+        return $this->hooks->applyFilters('content.after_render', $html, $blocks);
     }
 
     protected function renderBlock(array $block): string
     {
+        // Permite a plugins interceptar y renderizar bloques personalizados
+        $custom = $this->hooks->applyFilters('content.render_block', null, $block);
+        if ($custom !== null) {
+            return (string) $custom;
+        }
+
         $type = $block['type'] ?? 'paragraph';
         $data = is_array($block['data'] ?? null) ? $block['data'] : [];
 
@@ -118,6 +134,7 @@ class ContentRenderer implements ContentRendererContract
         $cards = $items->map(function (Media $media): string {
             $url = Storage::disk($media->disk)->url($media->path);
             $alt = e($media->alt_text ?: $media->title ?: $media->filename);
+
             return sprintf('<figure class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"><img src="%s" alt="%s" class="h-64 w-full object-cover" /></figure>', e($url), $alt);
         })->implode('');
 

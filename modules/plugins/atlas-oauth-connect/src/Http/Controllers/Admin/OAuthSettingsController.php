@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Socialite\Facades\Socialite;
 use Modules\Plugins\AtlasOAuthConnect\Support\OAuthConfig;
 use Modules\Plugins\AtlasOAuthConnect\Support\OAuthProviderRegistry;
 
@@ -18,7 +19,7 @@ class OAuthSettingsController extends Controller
     {
         return Inertia::render('admin/plugins/oauth-connect', [
             'pluginActive' => Plugin::query()->where('slug', 'atlas-oauth-connect')->value('is_active') ?? false,
-            'socialiteInstalled' => class_exists(\Laravel\Socialite\Facades\Socialite::class),
+            'socialiteInstalled' => class_exists(Socialite::class),
             'providers' => OAuthProviderRegistry::all(),
             'settings' => [
                 'google_enabled' => (bool) OAuthConfig::setting('google_enabled', false),

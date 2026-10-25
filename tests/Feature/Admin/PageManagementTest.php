@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Permission;
 use App\Models\Page;
+use App\Models\Permission;
 use App\Models\Revision;
 use App\Models\User;
 use Spatie\Permission\Models\Role;

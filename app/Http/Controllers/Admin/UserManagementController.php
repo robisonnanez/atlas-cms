@@ -48,7 +48,7 @@ class UserManagementController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        $user->syncRoles(!empty($data['role']) ? [$data['role']] : []);
+        $user->syncRoles(! empty($data['role']) ? [$data['role']] : []);
 
         return back()->with('success', 'Usuario creado correctamente.');
     }
@@ -67,13 +67,13 @@ class UserManagementController extends Controller
             'email' => $data['email'],
         ];
 
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $payload['password'] = $data['password'];
             $payload['password_text'] = $data['password'];
         }
 
         $user->update($payload);
-        $user->syncRoles(!empty($data['role']) ? [$data['role']] : []);
+        $user->syncRoles(! empty($data['role']) ? [$data['role']] : []);
 
         return back()->with('success', 'Usuario actualizado correctamente.');
     }

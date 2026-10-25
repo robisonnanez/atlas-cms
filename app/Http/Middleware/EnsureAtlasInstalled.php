@@ -11,8 +11,7 @@ class EnsureAtlasInstalled
 {
     public function __construct(
         protected InstallStateStore $installStateStore,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {

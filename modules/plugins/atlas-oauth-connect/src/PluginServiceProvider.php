@@ -17,7 +17,7 @@ class PluginServiceProvider extends ServiceProvider
     {
         OAuthConfig::boot();
 
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->registerRoutes();
     }
@@ -25,11 +25,11 @@ class PluginServiceProvider extends ServiceProvider
     protected function registerRoutes(): void
     {
         Route::middleware(['web'])
-            ->group(__DIR__ . '/../routes/web.php');
+            ->group(__DIR__.'/../routes/web.php');
 
         Route::middleware(['web', 'auth'])
             ->prefix('admin/plugins/atlas-oauth-connect')
             ->name('admin.plugins.atlas-oauth-connect.')
-            ->group(__DIR__ . '/../routes/admin.php');
+            ->group(__DIR__.'/../routes/admin.php');
     }
 }

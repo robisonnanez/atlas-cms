@@ -10,7 +10,9 @@ use App\Models\MediaDirectory;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Setting;
+use App\Support\Cms\CmsHookManager;
 use App\Support\Cms\SeoMetadataBuilder;
+use App\Support\Cms\ThemeManager;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,12 +23,14 @@ class PublicSiteController extends Controller
         protected ContentRendererContract $renderer,
         protected MenuResolverContract $menus,
         protected SeoMetadataBuilder $seo,
-    ) {
-    }
+        protected ThemeManager $themes,
+        protected CmsHookManager $hooks,
+    ) {}
 
     public function home(): Response
     {
         $page = Page::query()->where('slug', 'home')->first();
+        $this->hooks->doAction('site.home_viewed');
 
         return Inertia::render('site/home', [
             'site' => $this->siteProps(),
@@ -41,10 +45,14 @@ class PublicSiteController extends Controller
     {
         abort_unless($page->status === 'published', 404);
 
+        $pagePayload = $this->serializePage($page);
+        $pagePayload = $this->hooks->applyFilters('site.page_payload', $pagePayload, $page);
+        $this->hooks->doAction('site.page_viewed', $page);
+
         return Inertia::render('site/page', [
             'site' => $this->siteProps(),
             'menu' => $this->menus->resolve('primary'),
-            'page' => $this->serializePage($page),
+            'page' => $pagePayload,
             'mediaLibrary' => $this->mediaLibrary(),
             'latestPosts' => $this->latestPosts(),
             'seo' => $this->seo->forContent($page->seo_title ?: $page->title, $page->seo_description, url('/'.$page->slug)),
@@ -64,14 +72,18 @@ class PublicSiteController extends Controller
     {
         abort_unless($post->status === 'published', 404);
 
+        $postPayload = [
+            ...$post->toArray(),
+            'content_json' => $post->content_json ?? [],
+            'rendered_html' => $post->content_html ?: $this->renderer->render($post->content_json ?? []),
+        ];
+        $postPayload = $this->hooks->applyFilters('site.post_payload', $postPayload, $post);
+        $this->hooks->doAction('site.post_viewed', $post);
+
         return Inertia::render('site/post', [
             'site' => $this->siteProps(),
             'menu' => $this->menus->resolve('primary'),
-            'post' => [
-                ...$post->toArray(),
-                'content_json' => $post->content_json ?? [],
-                'rendered_html' => $post->content_html ?: $this->renderer->render($post->content_json ?? []),
-            ],
+            'post' => $postPayload,
             'mediaLibrary' => $this->mediaLibrary(),
             'latestPosts' => $this->latestPosts(),
             'seo' => $this->seo->forContent($post->seo_title ?: $post->title, $post->seo_description, url('/blog/'.$post->slug)),
@@ -100,12 +112,15 @@ class PublicSiteController extends Controller
 
     protected function siteProps(): array
     {
-        return [
+        $props = [
             'identity' => Setting::query()->where('key', 'site.identity')->first()?->value ?? ['name' => 'Atlas CMS'],
             'seo' => Setting::query()->where('key', 'site.seo')->first()?->value ?? [],
             'chrome' => Setting::query()->where('key', 'site.chrome')->first()?->value ?? [],
+            'theme' => $this->themes->activePayload(),
             'locale' => app()->getLocale(),
         ];
+
+        return $this->hooks->applyFilters('site.props', $props);
     }
 
     protected function serializePage(Page $page): array

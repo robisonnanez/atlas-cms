@@ -9,6 +9,7 @@ use App\Models\MediaDirectory;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Revision;
+use App\Support\Cms\CmsHookManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,7 +21,9 @@ class PageController extends Controller
 {
     public function __construct(
         protected ContentRendererContract $renderer,
+        protected ?CmsHookManager $hooks = null,
     ) {
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
     }
 
     public function index(): Response
@@ -42,11 +45,15 @@ class PageController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $page = Page::query()->create($this->payload($request) + [
+        $payload = $this->hooks->applyFilters('admin.page.before_store', $this->payload($request), $request);
+
+        $page = Page::query()->create($payload + [
             'author_id' => $request->user()?->id,
         ]);
 
         $this->storeRevision($page, $request);
+
+        $this->hooks->doAction('admin.page.created', $page, $request);
 
         return redirect()->route('admin.pages.index')->with('success', 'Página creada correctamente.');
     }
@@ -75,15 +82,23 @@ class PageController extends Controller
 
     public function update(Request $request, Page $page): RedirectResponse
     {
-        $page->update($this->payload($request));
+        $payload = $this->hooks->applyFilters('admin.page.before_update', $this->payload($request), $page, $request);
+
+        $page->update($payload);
         $this->storeRevision($page, $request);
+
+        $this->hooks->doAction('admin.page.updated', $page, $request);
 
         return redirect()->route('admin.pages.index')->with('success', 'Página actualizada correctamente.');
     }
 
     public function destroy(Page $page): RedirectResponse
     {
+        $this->hooks->doAction('admin.page.deleting', $page);
+
         $page->delete();
+
+        $this->hooks->doAction('admin.page.deleted', $page);
 
         return redirect()->route('admin.pages.index')->with('success', 'Página eliminada correctamente.');
     }
@@ -91,7 +106,7 @@ class PageController extends Controller
     public function restoreRevision(Request $request, Page $page, Revision $revision): RedirectResponse
     {
         if ($revision->revisable_type !== Page::class || $revision->revisable_id !== $page->id) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException;
         }
 
         $snapshot = $revision->snapshot ?? [];
@@ -111,6 +126,8 @@ class PageController extends Controller
         ]);
 
         $this->storeRevision($page, $request);
+
+        $this->hooks->doAction('admin.page.restored', $page, $revision);
 
         return back()->with('success', 'La página se restauró desde la revisión seleccionada.');
     }

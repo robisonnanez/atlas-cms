@@ -10,6 +10,7 @@ use App\Models\MediaDirectory;
 use App\Models\Post;
 use App\Models\Revision;
 use App\Models\Tag;
+use App\Support\Cms\CmsHookManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +22,9 @@ class PostController extends Controller
 {
     public function __construct(
         protected ContentRendererContract $renderer,
+        protected ?CmsHookManager $hooks = null,
     ) {
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
     }
 
     public function index(): Response
@@ -45,13 +48,17 @@ class PostController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $post = Post::query()->create($this->payload($request) + [
+        $payload = $this->hooks->applyFilters('admin.post.before_store', $this->payload($request), $request);
+
+        $post = Post::query()->create($payload + [
             'author_id' => $request->user()?->id,
         ]);
 
         $post->categories()->sync($request->input('category_ids', []));
         $post->tags()->sync($request->input('tag_ids', []));
         $this->storeRevision($post, $request);
+
+        $this->hooks->doAction('admin.post.created', $post, $request);
 
         return redirect()->route('admin.posts.index')->with('success', 'Entrada creada correctamente.');
     }
@@ -84,17 +91,25 @@ class PostController extends Controller
 
     public function update(Request $request, Post $post): RedirectResponse
     {
-        $post->update($this->payload($request));
+        $payload = $this->hooks->applyFilters('admin.post.before_update', $this->payload($request), $post, $request);
+
+        $post->update($payload);
         $post->categories()->sync($request->input('category_ids', []));
         $post->tags()->sync($request->input('tag_ids', []));
         $this->storeRevision($post, $request);
+
+        $this->hooks->doAction('admin.post.updated', $post, $request);
 
         return redirect()->route('admin.posts.index')->with('success', 'Entrada actualizada correctamente.');
     }
 
     public function destroy(Post $post): RedirectResponse
     {
+        $this->hooks->doAction('admin.post.deleting', $post);
+
         $post->delete();
+
+        $this->hooks->doAction('admin.post.deleted', $post);
 
         return redirect()->route('admin.posts.index')->with('success', 'Entrada eliminada correctamente.');
     }
@@ -102,7 +117,7 @@ class PostController extends Controller
     public function restoreRevision(Request $request, Post $post, Revision $revision): RedirectResponse
     {
         if ($revision->revisable_type !== Post::class || $revision->revisable_id !== $post->id) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException;
         }
 
         $snapshot = $revision->snapshot ?? [];
@@ -124,6 +139,8 @@ class PostController extends Controller
         $post->categories()->sync($snapshot['category_ids'] ?? []);
         $post->tags()->sync($snapshot['tag_ids'] ?? []);
         $this->storeRevision($post, $request);
+
+        $this->hooks->doAction('admin.post.restored', $post, $revision);
 
         return back()->with('success', 'La entrada se restauró desde la revisión seleccionada.');
     }

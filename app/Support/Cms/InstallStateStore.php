@@ -8,8 +8,7 @@ class InstallStateStore
 {
     public function __construct(
         protected Filesystem $files,
-    ) {
-    }
+    ) {}
 
     public function installed(): bool
     {

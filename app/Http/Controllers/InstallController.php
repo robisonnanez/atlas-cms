@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Support\Cms\InstallStateStore;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -19,8 +18,7 @@ class InstallController extends Controller
 {
     public function __construct(
         protected InstallStateStore $installStateStore,
-    ) {
-    }
+    ) {}
 
     public function welcome(): Response|RedirectResponse
     {

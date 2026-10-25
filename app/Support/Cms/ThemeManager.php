@@ -7,9 +7,58 @@ use Illuminate\Support\Facades\File;
 
 class ThemeManager
 {
+    public function __construct(
+        protected ?CmsHookManager $hooks = null,
+    ) {
+        $this->hooks = $hooks ?? app(CmsHookManager::class);
+    }
+
     public function active(): ?Theme
     {
         return Theme::query()->where('is_active', true)->first();
+    }
+
+    /**
+     * Retorna la configuración estructurada del tema activo para el sitio público.
+     * Si no existe tema activo en BD, usa el tema por defecto configurado.
+     *
+     * @return array<string, mixed>
+     */
+    public function activePayload(): array
+    {
+        $theme = $this->active();
+
+        if (! $theme) {
+            $default = [
+                'name' => 'Atlas Default',
+                'slug' => config('atlas.default_theme', 'atlas-default'),
+                'version' => '1.0.0',
+                'settings' => [
+                    'accent' => '#2563eb',
+                    'surface' => '#ffffff',
+                ],
+                'zones' => ['header', 'footer', 'sidebar'],
+                'templates' => ['home', 'page', 'post'],
+            ];
+
+            return $this->hooks->applyFilters('theme.active_payload', $default, null);
+        }
+
+        $settings = $theme->settings ?? [];
+        $defaults = $settings['defaults'] ?? [];
+
+        $payload = [
+            'id' => $theme->id,
+            'name' => $theme->name,
+            'slug' => $theme->slug,
+            'version' => $theme->version,
+            'author' => $theme->author,
+            'settings' => is_array($defaults) && ! empty($defaults) ? $defaults : ($settings['settings'] ?? []),
+            'zones' => $settings['zones'] ?? ['header', 'footer', 'sidebar'],
+            'templates' => $settings['templates'] ?? ['home', 'page', 'post'],
+        ];
+
+        return $this->hooks->applyFilters('theme.active_payload', $payload, $theme);
     }
 
     public function discover(): array

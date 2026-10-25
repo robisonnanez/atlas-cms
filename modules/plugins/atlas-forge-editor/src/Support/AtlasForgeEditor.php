@@ -3,7 +3,6 @@
 namespace Modules\Plugins\AtlasForgeEditor\Support;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class AtlasForgeEditor
 {
@@ -46,7 +45,7 @@ class AtlasForgeEditor
 
     public function settingsSchema(): array
     {
-        $manifest = json_decode((string) file_get_contents(__DIR__ . '/../../plugin.json'), true) ?: [];
+        $manifest = json_decode((string) file_get_contents(__DIR__.'/../../plugin.json'), true) ?: [];
 
         return [[
             'group' => 'atlas-forge-editor',
@@ -83,7 +82,7 @@ class AtlasForgeEditor
 
     public function sanitizeHtml(string $html): string
     {
-        $allowedTags = '<' . implode('><', config('atlas-forge-editor.allowed_tags', [])) . '>';
+        $allowedTags = '<'.implode('><', config('atlas-forge-editor.allowed_tags', [])).'>';
         $html = strip_tags($html, $allowedTags);
 
         // Limpieza básica contra scripts inline. Para producción estricta se recomienda HTMLPurifier.
