@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RedirectRuleController;
 use App\Http\Controllers\Admin\RolePermissionController;
+use App\Http\Controllers\Admin\ScheduledTaskController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TaxonomyController;
 use App\Http\Controllers\Admin\ThemeController;
@@ -54,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pages/{page}/edit', [PageController::class, 'edit'])->middleware('permission:atlas.pages.edit')->name('pages.edit');
         Route::put('pages/{page}', [PageController::class, 'update'])->middleware('permission:atlas.pages.edit')->name('pages.update');
         Route::delete('pages/{page}', [PageController::class, 'destroy'])->middleware('permission:atlas.pages.delete')->name('pages.destroy');
+        Route::post('pages/{page}/status', [PageController::class, 'updateStatus'])->middleware('permission:atlas.pages.edit')->name('pages.status');
         Route::post('pages/{page}/revisions/{revision}/restore', [PageController::class, 'restoreRevision'])->middleware('permission:atlas.pages.restore')->name('pages.revisions.restore');
 
         Route::get('posts', [PostController::class, 'index'])->middleware('permission:atlas.posts.view')->name('posts.index');
@@ -62,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('posts/{post}/edit', [PostController::class, 'edit'])->middleware('permission:atlas.posts.edit')->name('posts.edit');
         Route::put('posts/{post}', [PostController::class, 'update'])->middleware('permission:atlas.posts.edit')->name('posts.update');
         Route::delete('posts/{post}', [PostController::class, 'destroy'])->middleware('permission:atlas.posts.delete')->name('posts.destroy');
+        Route::post('posts/{post}/status', [PostController::class, 'updateStatus'])->middleware('permission:atlas.posts.edit')->name('posts.status');
         Route::post('posts/{post}/revisions/{revision}/restore', [PostController::class, 'restoreRevision'])->middleware('permission:atlas.posts.restore')->name('posts.revisions.restore');
 
         Route::get('categories', [TaxonomyController::class, 'index'])->middleware('permission:atlas.taxonomies.view')->name('taxonomies.index');
@@ -97,6 +101,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('redirects', [RedirectRuleController::class, 'store'])->name('redirects.store');
         Route::put('redirects/{redirectRule}', [RedirectRuleController::class, 'update'])->name('redirects.update');
         Route::delete('redirects/{redirectRule}', [RedirectRuleController::class, 'destroy'])->name('redirects.destroy');
+
+        Route::get('scheduled-tasks', [ScheduledTaskController::class, 'index'])->middleware('permission:atlas.scheduled_tasks.view')->name('scheduled-tasks.index');
+        Route::post('scheduled-tasks', [ScheduledTaskController::class, 'store'])->middleware('permission:atlas.scheduled_tasks.manage')->name('scheduled-tasks.store');
+        Route::put('scheduled-tasks/{scheduledTask}', [ScheduledTaskController::class, 'update'])->middleware('permission:atlas.scheduled_tasks.manage')->name('scheduled-tasks.update');
+        Route::delete('scheduled-tasks/{scheduledTask}', [ScheduledTaskController::class, 'destroy'])->middleware('permission:atlas.scheduled_tasks.manage')->name('scheduled-tasks.destroy');
+        Route::post('scheduled-tasks/{scheduledTask}/run', [ScheduledTaskController::class, 'run'])->middleware('permission:atlas.scheduled_tasks.manage')->name('scheduled-tasks.run');
+        Route::post('scheduled-tasks/{scheduledTask}/toggle', [ScheduledTaskController::class, 'toggle'])->middleware('permission:atlas.scheduled_tasks.manage')->name('scheduled-tasks.toggle');
+
+        Route::get('activity-logs', [ActivityLogController::class, 'index'])->middleware('permission:admin.activity_logs.view')->name('activity-logs.index');
+        Route::get('activity-logs/{activity}', [ActivityLogController::class, 'show'])->middleware('permission:admin.activity_logs.view')->name('activity-logs.show');
+        Route::delete('activity-logs', [ActivityLogController::class, 'clear'])->middleware('permission:admin.activity_logs.manage')->name('activity-logs.clear');
 
         Route::get('themes', [ThemeController::class, 'index'])->middleware('permission:atlas.themes.view')->name('themes.index');
         Route::post('themes/install', [ThemeController::class, 'install'])->middleware('permission:atlas.themes.activate')->name('themes.install');

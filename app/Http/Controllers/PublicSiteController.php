@@ -30,7 +30,7 @@ class PublicSiteController extends Controller
 
     public function home(): Response
     {
-        $page = Page::query()->where('slug', 'home')->first();
+        $page = Page::query()->published()->where('slug', 'home')->first();
         $this->hooks->doAction('site.home_viewed');
 
         return Inertia::render('site/home', [
@@ -44,7 +44,7 @@ class PublicSiteController extends Controller
 
     public function page(Page $page): Response
     {
-        abort_unless($page->status === 'published', 404);
+        abort_unless($page->isPublished(), 404);
 
         $pagePayload = $this->serializePage($page);
         $pagePayload = $this->hooks->applyFilters('site.page_payload', $pagePayload, $page);
@@ -71,7 +71,7 @@ class PublicSiteController extends Controller
 
     public function post(Post $post): Response
     {
-        abort_unless($post->status === 'published', 404);
+        abort_unless($post->isPublished(), 404);
 
         $postPayload = [
             ...$post->toArray(),

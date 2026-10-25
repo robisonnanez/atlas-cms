@@ -68,6 +68,10 @@ class SuperAdminSeeder extends Seeder
             'atlas.plugins.toggle',
             'atlas.settings.view',
             'atlas.settings.edit',
+            'atlas.scheduled_tasks.view',
+            'atlas.scheduled_tasks.manage',
+            'admin.activity_logs.view',
+            'admin.activity_logs.manage',
         ];
 
         foreach ($permissions as $permissionName) {
@@ -147,6 +151,7 @@ class SuperAdminSeeder extends Seeder
                 ['idModulos' => 7, 'nombre' => 'Plugins', 'url' => '/admin/plugins', 'icono' => 'pi pi-box', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 2, 'cesdo' => true, 'permission_name' => 'atlas.plugins.view'],
                 ['idModulos' => 7, 'nombre' => 'Configuracion', 'url' => '/admin/settings', 'icono' => 'pi pi-cog', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 3, 'cesdo' => true, 'permission_name' => 'atlas.settings.view'],
                 ['idModulos' => 7, 'nombre' => 'Redirecciones', 'url' => '/admin/redirects', 'icono' => 'pi pi-directions', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 4, 'cesdo' => true, 'permission_name' => null],
+                ['idModulos' => 7, 'nombre' => 'Tareas Programadas', 'url' => '/admin/scheduled-tasks', 'icono' => 'pi pi-clock', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 5, 'cesdo' => true, 'permission_name' => 'atlas.scheduled_tasks.view'],
             ] as $row) {
                 Menu::query()->updateOrCreate(['nombre' => $row['nombre'], 'id_menu' => $row['id_menu']], $row);
             }
@@ -158,6 +163,7 @@ class SuperAdminSeeder extends Seeder
                 ['idModulos' => 8, 'nombre' => 'Roles y Permisos', 'url' => '/admin/roles-permissions', 'icono' => 'pi pi-lock', 'id_menu' => $adminParent->id, 'main' => false, 'orden' => 2, 'cesdo' => true, 'permission_name' => 'admin.roles_permissions.view'],
                 ['idModulos' => 8, 'nombre' => 'Permisos por Usuario', 'url' => '/admin/users-permissions', 'icono' => 'pi pi-users', 'id_menu' => $adminParent->id, 'main' => false, 'orden' => 3, 'cesdo' => true, 'permission_name' => 'admin.user_permissions.view'],
                 ['idModulos' => 8, 'nombre' => 'Modulos y Menus', 'url' => '/admin/navigation-management', 'icono' => 'pi pi-sitemap', 'id_menu' => $adminParent->id, 'main' => false, 'orden' => 4, 'cesdo' => true, 'permission_name' => 'admin.navigation.view'],
+                ['idModulos' => 8, 'nombre' => 'Registro de Actividad', 'url' => '/admin/activity-logs', 'icono' => 'pi pi-history', 'id_menu' => $adminParent->id, 'main' => false, 'orden' => 5, 'cesdo' => true, 'permission_name' => 'admin.activity_logs.view'],
             ] as $row) {
                 Menu::query()->updateOrCreate(['nombre' => $row['nombre'], 'id_menu' => $row['id_menu']], $row);
             }
@@ -179,6 +185,8 @@ class SuperAdminSeeder extends Seeder
                 'atlas.themes.view', 'atlas.themes.activate',
                 'atlas.plugins.view', 'atlas.plugins.toggle',
                 'atlas.settings.view', 'atlas.settings.edit',
+                'atlas.scheduled_tasks.view', 'atlas.scheduled_tasks.manage',
+                'admin.activity_logs.view', 'admin.activity_logs.manage',
             ],
             'editor' => [
                 'module.3.access', 'module.4.access', 'module.5.access', 'module.6.access',
