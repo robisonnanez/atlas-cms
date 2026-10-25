@@ -135,6 +135,7 @@ class SuperAdminSeeder extends Seeder
                 ['idModulos' => 6, 'nombre' => 'Taxonomias', 'url' => '/admin/categories', 'icono' => 'pi pi-tags', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 1, 'cesdo' => true, 'permission_name' => 'atlas.taxonomies.view'],
                 ['idModulos' => 6, 'nombre' => 'Media', 'url' => '/admin/media', 'icono' => 'pi pi-images', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 2, 'cesdo' => true, 'permission_name' => 'atlas.media.view'],
                 ['idModulos' => 6, 'nombre' => 'Menus', 'url' => '/admin/menus', 'icono' => 'pi pi-sitemap', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 3, 'cesdo' => true, 'permission_name' => 'atlas.menus.view'],
+                ['idModulos' => 6, 'nombre' => 'Campos Personalizados', 'url' => '/admin/custom-fields', 'icono' => 'pi pi-list-check', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 4, 'cesdo' => true, 'permission_name' => null],
             ] as $row) {
                 Menu::query()->updateOrCreate(['nombre' => $row['nombre'], 'id_menu' => $row['id_menu']], $row);
             }
@@ -145,6 +146,7 @@ class SuperAdminSeeder extends Seeder
                 ['idModulos' => 7, 'nombre' => 'Temas', 'url' => '/admin/themes', 'icono' => 'pi pi-palette', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 1, 'cesdo' => true, 'permission_name' => 'atlas.themes.view'],
                 ['idModulos' => 7, 'nombre' => 'Plugins', 'url' => '/admin/plugins', 'icono' => 'pi pi-box', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 2, 'cesdo' => true, 'permission_name' => 'atlas.plugins.view'],
                 ['idModulos' => 7, 'nombre' => 'Configuracion', 'url' => '/admin/settings', 'icono' => 'pi pi-cog', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 3, 'cesdo' => true, 'permission_name' => 'atlas.settings.view'],
+                ['idModulos' => 7, 'nombre' => 'Redirecciones', 'url' => '/admin/redirects', 'icono' => 'pi pi-directions', 'id_menu' => $systemParent->id, 'main' => false, 'orden' => 4, 'cesdo' => true, 'permission_name' => null],
             ] as $row) {
                 Menu::query()->updateOrCreate(['nombre' => $row['nombre'], 'id_menu' => $row['id_menu']], $row);
             }

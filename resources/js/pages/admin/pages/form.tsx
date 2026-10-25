@@ -1,3 +1,4 @@
+import CustomFieldsEditor, { type CustomFieldDefinition } from '@/components/admin/custom-fields-editor';
 import BlockEditor from '@/editor/block-editor';
 import type { AtlasBlock, AtlasLatestPostPreview, AtlasMediaAsset, AtlasMediaDirectory } from '@/types/atlas-content';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -17,10 +18,12 @@ type PageFormProps = {
         content_json: AtlasBlock[] | null;
         seo_title: string | null;
         seo_description: string | null;
+        custom_fields?: Record<string, any>;
     };
     revisions?: Array<{ id: number; created_at: string | null; author_name: string | null }>;
     editorMedia: { directories: AtlasMediaDirectory[]; assets: AtlasMediaAsset[] };
     latestPostsPreview: AtlasLatestPostPreview[];
+    availableCustomFields?: CustomFieldDefinition[];
 };
 
 const statusOptions = [
@@ -28,7 +31,13 @@ const statusOptions = [
     { label: 'Publicado', value: 'published' },
 ];
 
-export default function PageForm({ page, revisions = [], editorMedia, latestPostsPreview }: PageFormProps) {
+export default function PageForm({
+    page,
+    revisions = [],
+    editorMedia,
+    latestPostsPreview,
+    availableCustomFields = [],
+}: PageFormProps) {
     const form = useForm({
         title: page?.title ?? '',
         slug: page?.slug ?? '',
@@ -38,6 +47,7 @@ export default function PageForm({ page, revisions = [], editorMedia, latestPost
         content_json: page?.content_json ?? [],
         seo_title: page?.seo_title ?? '',
         seo_description: page?.seo_description ?? '',
+        custom_fields: page?.custom_fields ?? {},
     });
 
     return (
@@ -72,23 +82,38 @@ export default function PageForm({ page, revisions = [], editorMedia, latestPost
                 </section>
 
                 <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-                    <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div className="grid gap-4">
-                            <label className="grid gap-2">
-                                <span className="text-sm font-medium text-slate-700">Título</span>
-                                <InputText value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} placeholder="Sobre Atlas CMS" className="w-full" />
-                            </label>
-                            <label className="grid gap-2">
-                                <span className="text-sm font-medium text-slate-700">Slug</span>
-                                <InputText value={form.data.slug} onChange={(event) => form.setData('slug', event.target.value)} placeholder="sobre-atlas" className="w-full" />
-                            </label>
-                            <label className="grid gap-2">
-                                <span className="text-sm font-medium text-slate-700">Extracto</span>
-                                <InputTextarea value={form.data.excerpt} onChange={(event) => form.setData('excerpt', event.target.value)} autoResize rows={4} placeholder="Resumen breve para listados y vistas previas." className="w-full" />
-                            </label>
+                    <div className="space-y-6">
+                        <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div className="grid gap-4">
+                                <label className="grid gap-2">
+                                    <span className="text-sm font-medium text-slate-700">Título</span>
+                                    <InputText value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} placeholder="Sobre Atlas CMS" className="w-full" />
+                                </label>
+                                <label className="grid gap-2">
+                                    <span className="text-sm font-medium text-slate-700">Slug</span>
+                                    <InputText value={form.data.slug} onChange={(event) => form.setData('slug', event.target.value)} placeholder="sobre-atlas" className="w-full" />
+                                </label>
+                                <label className="grid gap-2">
+                                    <span className="text-sm font-medium text-slate-700">Extracto</span>
+                                    <InputTextarea value={form.data.excerpt} onChange={(event) => form.setData('excerpt', event.target.value)} autoResize rows={4} placeholder="Resumen breve para listados y vistas previas." className="w-full" />
+                                </label>
+                            </div>
+
+                            <BlockEditor value={form.data.content_json} onChange={(blocks) => form.setData('content_json', blocks)} directories={editorMedia.directories} mediaAssets={editorMedia.assets} latestPostsPreview={latestPostsPreview} />
                         </div>
 
-                        <BlockEditor value={form.data.content_json} onChange={(blocks) => form.setData('content_json', blocks)} directories={editorMedia.directories} mediaAssets={editorMedia.assets} latestPostsPreview={latestPostsPreview} />
+                        {availableCustomFields && availableCustomFields.length > 0 && (
+                            <CustomFieldsEditor
+                                fields={availableCustomFields}
+                                values={form.data.custom_fields}
+                                onChange={(slug, value) => {
+                                    form.setData('custom_fields', {
+                                        ...form.data.custom_fields,
+                                        [slug]: value,
+                                    });
+                                }}
+                            />
+                        )}
                     </div>
 
                     <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
