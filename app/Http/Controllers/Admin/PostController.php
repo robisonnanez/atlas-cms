@@ -12,6 +12,7 @@ use App\Models\Post;
 use App\Models\Revision;
 use App\Models\Tag;
 use App\Support\Cms\CmsHookManager;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -30,8 +31,18 @@ class PostController extends Controller
 
     public function index(): Response
     {
+        $status = request()->query('status');
+
         return Inertia::render('admin/posts/index', [
-            'posts' => Post::query()->with('author')->latest()->get(),
+            'posts' => Post::query()
+                ->with('author')
+                ->when($status, fn ($q) => $q->where('status', $status))
+                ->latest()
+                ->get(),
+            'filters' => [
+                'status' => $status,
+            ],
+            'allowedStatuses' => Post::allowedStatuses(),
         ]);
     }
 
@@ -159,22 +170,45 @@ class PostController extends Controller
         return back()->with('success', 'La entrada se restauró desde la revisión seleccionada.');
     }
 
+    public function updateStatus(Request $request, Post $post): RedirectResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'string', 'in:'.implode(',', Post::allowedStatuses())],
+            'published_at' => ['nullable', 'date'],
+        ]);
+
+        $publishedAt = ! empty($data['published_at']) ? Carbon::parse($data['published_at']) : null;
+        $post->transitionTo($data['status'], $publishedAt);
+
+        return back()->with('success', "El estado de la entrada cambió a '{$data['status']}'.");
+    }
+
     protected function payload(Request $request): array
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
-            'status' => ['required', 'string', 'max:50'],
+            'status' => ['required', 'string', 'in:'.implode(',', Post::allowedStatuses())],
             'excerpt' => ['nullable', 'string'],
             'content_json' => ['nullable', 'array'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string'],
             'primary_category_id' => ['nullable', 'integer'],
+            'published_at' => ['nullable', 'date'],
         ]);
 
         $blocks = $data['content_json'] ?? [];
         $data['content_html'] = $this->renderer->render($blocks);
-        $data['published_at'] = $data['status'] === 'published' ? now() : null;
+
+        if ($data['status'] === Post::STATUS_PUBLISHED) {
+            $data['published_at'] = ! empty($data['published_at']) ? Carbon::parse($data['published_at']) : now();
+        } elseif ($data['status'] === Post::STATUS_SCHEDULED) {
+            $data['published_at'] = ! empty($data['published_at']) ? Carbon::parse($data['published_at']) : now()->addHour();
+        } elseif (! empty($data['published_at'])) {
+            $data['published_at'] = Carbon::parse($data['published_at']);
+        } else {
+            $data['published_at'] = null;
+        }
 
         return $data;
     }
