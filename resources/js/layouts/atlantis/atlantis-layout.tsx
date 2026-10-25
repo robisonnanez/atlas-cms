@@ -117,9 +117,11 @@ export default function AtlantisLayout({ children }: PropsWithChildren) {
         if (path.startsWith('/admin/categories')) return [t('Contenido', 'Content'), t('Taxonomías', 'Taxonomies')];
         if (path.startsWith('/admin/media')) return [t('Contenido', 'Content'), t('Media', 'Media')];
         if (path.startsWith('/admin/menus')) return [t('Contenido', 'Content'), t('Menús', 'Menus')];
+        if (path.startsWith('/admin/custom-fields')) return [t('Contenido', 'Content'), t('Campos personalizados', 'Custom fields')];
         if (path.startsWith('/admin/themes')) return [t('Sistema', 'System'), t('Temas', 'Themes')];
         if (path.startsWith('/admin/plugins')) return [t('Sistema', 'System'), t('Plugins', 'Plugins')];
         if (path.startsWith('/admin/settings')) return [t('Sistema', 'System'), t('Configuración', 'Settings')];
+        if (path.startsWith('/admin/redirects')) return [t('Sistema', 'System'), t('Redirecciones', 'Redirects')];
         if (path.startsWith('/admin/users')) return [t('Administración', 'Admin'), t('Usuarios', 'Users')];
         if (path.startsWith('/admin/roles-permissions')) return [t('Administración', 'Admin'), t('Roles y permisos', 'Roles & permissions')];
         if (path.startsWith('/admin/users-permissions')) return [t('Administración', 'Admin'), t('Permisos por usuario', 'User permissions')];
