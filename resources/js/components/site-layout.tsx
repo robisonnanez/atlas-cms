@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import ThemePosition, { PositionModule } from './theme-position';
 
 type SiteMenuItem = { id: number; label: string; url: string; target?: string | null; children?: SiteMenuItem[] };
 type ChromeHeader = { advanced_html?: string };
@@ -26,6 +27,7 @@ type SiteLayoutProps = {
         identity?: { name?: string; tagline?: string };
         chrome?: { header?: ChromeHeader; footer?: ChromeFooter; header_html?: string; footer_html?: string };
         theme?: SiteThemePayload;
+        positions?: Record<string, PositionModule[]>;
         locale?: string;
     };
     menu?: SiteMenuItem[];
@@ -116,6 +118,7 @@ export default function SiteLayout({ title, site, menu = [], children }: SiteLay
     const header = chrome.header;
     const footer = chrome.footer;
     const themeAccent = site.theme?.settings?.accent as string | undefined;
+    const positions = site.positions ?? {};
 
     return (
         <>
@@ -124,6 +127,14 @@ export default function SiteLayout({ title, site, menu = [], children }: SiteLay
                 className="min-h-screen bg-[radial-gradient(circle_at_top,_#eff6ff,_#f8fafc_35%,_#ffffff_100%)] text-slate-900"
                 style={{ '--atlas-accent': themeAccent ?? '#2563eb' } as React.CSSProperties}
             >
+                {positions.top_bar?.length ? (
+                    <div className="bg-slate-900 text-slate-200 border-b border-slate-800 text-xs py-2 px-6">
+                        <div className="mx-auto max-w-6xl">
+                            <ThemePosition position="top_bar" modules={positions.top_bar} />
+                        </div>
+                    </div>
+                ) : null}
+
                 {header?.advanced_html ? (
                     <div dangerouslySetInnerHTML={{ __html: header.advanced_html }} />
                 ) : chrome.header_html ? (
@@ -144,8 +155,23 @@ export default function SiteLayout({ title, site, menu = [], children }: SiteLay
                                 <Link href="/login" className="rounded-full border border-slate-300 px-4 py-2 font-medium text-slate-700 transition hover:bg-slate-950 hover:text-white">Admin</Link>
                             </nav>
                         </div>
+                        {positions.header?.length ? (
+                            <div className="border-t border-slate-100 px-6 py-3">
+                                <div className="mx-auto max-w-6xl">
+                                    <ThemePosition position="header" modules={positions.header} />
+                                </div>
+                            </div>
+                        ) : null}
                     </header>
                 )}
+
+                {positions.banner?.length ? (
+                    <div className="atlas-banner-zone border-b border-slate-200 bg-slate-50/70 py-6 px-6">
+                        <div className="mx-auto max-w-6xl">
+                            <ThemePosition position="banner" modules={positions.banner} />
+                        </div>
+                    </div>
+                ) : null}
 
                 <main>{children}</main>
 
@@ -156,6 +182,15 @@ export default function SiteLayout({ title, site, menu = [], children }: SiteLay
                 ) : (
                     <footer className="border-t border-slate-200 bg-slate-950 text-slate-200">
                         <div className="mx-auto max-w-6xl px-6 py-12">
+                            {positions.footer?.length ? (
+                                <div className="mb-10 pb-8 border-b border-slate-800">
+                                    <ThemePosition
+                                        position="footer"
+                                        modules={positions.footer}
+                                        className="grid grid-cols-1 md:grid-cols-3 gap-8 text-slate-300"
+                                    />
+                                </div>
+                            ) : null}
                             <div className="flex flex-col gap-2 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
                                 <p>{brand}</p>
                                 <p>Contenido, menús, media y publicaciones gestionadas desde Atlas CMS.</p>

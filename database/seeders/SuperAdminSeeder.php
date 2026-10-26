@@ -70,6 +70,8 @@ class SuperAdminSeeder extends Seeder
             'atlas.settings.edit',
             'atlas.scheduled_tasks.view',
             'atlas.scheduled_tasks.manage',
+            'atlas.content_modules.view',
+            'atlas.content_modules.manage',
             'admin.activity_logs.view',
             'admin.activity_logs.manage',
         ];
@@ -140,6 +142,7 @@ class SuperAdminSeeder extends Seeder
                 ['idModulos' => 6, 'nombre' => 'Media', 'url' => '/admin/media', 'icono' => 'pi pi-images', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 2, 'cesdo' => true, 'permission_name' => 'atlas.media.view'],
                 ['idModulos' => 6, 'nombre' => 'Menus', 'url' => '/admin/menus', 'icono' => 'pi pi-sitemap', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 3, 'cesdo' => true, 'permission_name' => 'atlas.menus.view'],
                 ['idModulos' => 6, 'nombre' => 'Campos Personalizados', 'url' => '/admin/custom-fields', 'icono' => 'pi pi-list-check', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 4, 'cesdo' => true, 'permission_name' => null],
+                ['idModulos' => 6, 'nombre' => 'Modulos de Contenido', 'url' => '/admin/content-modules', 'icono' => 'pi pi-th-large', 'id_menu' => $contentParent->id, 'main' => false, 'orden' => 5, 'cesdo' => true, 'permission_name' => 'atlas.content_modules.view'],
             ] as $row) {
                 Menu::query()->updateOrCreate(['nombre' => $row['nombre'], 'id_menu' => $row['id_menu']], $row);
             }
@@ -186,6 +189,8 @@ class SuperAdminSeeder extends Seeder
                 'atlas.plugins.view', 'atlas.plugins.toggle',
                 'atlas.settings.view', 'atlas.settings.edit',
                 'atlas.scheduled_tasks.view', 'atlas.scheduled_tasks.manage',
+                'atlas.content_modules.view',
+                'atlas.content_modules.manage',
                 'admin.activity_logs.view', 'admin.activity_logs.manage',
             ],
             'editor' => [
@@ -195,6 +200,7 @@ class SuperAdminSeeder extends Seeder
                 'atlas.posts.view', 'atlas.posts.create', 'atlas.posts.edit',
                 'atlas.taxonomies.view', 'atlas.taxonomies.create', 'atlas.taxonomies.edit',
                 'atlas.media.view', 'atlas.media.create', 'atlas.media.edit', 'atlas.media.delete',
+                'atlas.content_modules.view', 'atlas.content_modules.manage',
             ],
             'author' => [
                 'module.3.access', 'module.4.access', 'module.6.access',

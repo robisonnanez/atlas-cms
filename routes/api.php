@@ -13,6 +13,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('categories', [ContentApiController::class, 'categories'])->name('categories.index');
     Route::get('tags', [ContentApiController::class, 'tags'])->name('tags.index');
     Route::get('menus/{location?}', [ContentApiController::class, 'menu'])->name('menus.show');
+    Route::get('positions', [ContentApiController::class, 'positions'])->name('positions.index');
+    Route::get('positions/{position}', [ContentApiController::class, 'position'])->name('positions.show');
     Route::get('settings/public', [ContentApiController::class, 'settings'])->name('settings.public');
     Route::get('search', [ContentApiController::class, 'search'])->name('search');
 });
