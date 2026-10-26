@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Domain\Menus\Contracts\MenuResolverContract;
+use App\Domain\Modules\Contracts\ContentModuleManagerContract;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Page;
@@ -24,8 +25,10 @@ class ContentApiController extends Controller
         protected SeoMetadataBuilder $seo,
         protected ThemeManager $themes,
         protected ?CmsHookManager $hooks = null,
+        protected ?ContentModuleManagerContract $modules = null,
     ) {
         $this->hooks = $hooks ?? app(CmsHookManager::class);
+        $this->modules = $modules ?? (app()->bound(ContentModuleManagerContract::class) ? app(ContentModuleManagerContract::class) : null);
     }
 
     public function pages(Request $request): JsonResponse
@@ -196,6 +199,32 @@ class ContentApiController extends Controller
             'status' => 'success',
             'location' => $location,
             'data' => $items,
+        ]);
+    }
+
+    public function positions(Request $request): JsonResponse
+    {
+        $context = (string) $request->query('context', 'general');
+        $page = $request->query('page');
+        $positions = $this->modules ? $this->modules->resolvePositionsForContext($context, $page) : [];
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $positions,
+        ]);
+    }
+
+    public function position(string $position, Request $request): JsonResponse
+    {
+        $context = (string) $request->query('context', 'general');
+        $page = $request->query('page');
+        $positions = $this->modules ? $this->modules->resolvePositionsForContext($context, $page) : [];
+        $modules = $positions[$position] ?? [];
+
+        return response()->json([
+            'status' => 'success',
+            'position' => $position,
+            'data' => $modules,
         ]);
     }
 

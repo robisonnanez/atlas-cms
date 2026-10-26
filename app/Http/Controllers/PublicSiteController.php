@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Domain\Menus\Contracts\MenuResolverContract;
+use App\Domain\Modules\Contracts\ContentModuleManagerContract;
 use App\Models\Category;
 use App\Models\Media;
 use App\Models\MediaDirectory;
@@ -26,7 +27,10 @@ class PublicSiteController extends Controller
         protected SeoMetadataBuilder $seo,
         protected ThemeManager $themes,
         protected CmsHookManager $hooks,
-    ) {}
+        protected ?ContentModuleManagerContract $modules = null,
+    ) {
+        $this->modules = $modules ?? (app()->bound(ContentModuleManagerContract::class) ? app(ContentModuleManagerContract::class) : null);
+    }
 
     public function home(): Response
     {
@@ -34,7 +38,7 @@ class PublicSiteController extends Controller
         $this->hooks->doAction('site.home_viewed');
 
         return Inertia::render('site/home', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('home', 'home'),
             'menu' => $this->menus->resolve('primary'),
             'hero' => $page ? $this->serializePage($page) : null,
             'mediaLibrary' => $this->mediaLibrary(),
@@ -51,7 +55,7 @@ class PublicSiteController extends Controller
         $this->hooks->doAction('site.page_viewed', $page);
 
         return Inertia::render('site/page', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('page', $page->slug),
             'menu' => $this->menus->resolve('primary'),
             'page' => $pagePayload,
             'mediaLibrary' => $this->mediaLibrary(),
@@ -63,7 +67,7 @@ class PublicSiteController extends Controller
     public function blog(): Response
     {
         return Inertia::render('site/blog-index', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('blog'),
             'menu' => $this->menus->resolve('primary'),
             'posts' => Post::query()->published()->latest('published_at')->paginate(12),
         ]);
@@ -83,7 +87,7 @@ class PublicSiteController extends Controller
         $this->hooks->doAction('site.post_viewed', $post);
 
         return Inertia::render('site/post', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('post', $post->slug),
             'menu' => $this->menus->resolve('primary'),
             'post' => $postPayload,
             'mediaLibrary' => $this->mediaLibrary(),
@@ -95,7 +99,7 @@ class PublicSiteController extends Controller
     public function category(Category $category): Response
     {
         return Inertia::render('site/blog-index', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('category', $category->slug),
             'menu' => $this->menus->resolve('primary'),
             'posts' => Post::query()->published()->whereHas('categories', fn ($query) => $query->whereKey($category->id))->latest('published_at')->paginate(12),
             'title' => $category->name,
@@ -105,7 +109,7 @@ class PublicSiteController extends Controller
     public function tag(string $slug): Response
     {
         return Inertia::render('site/blog-index', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('tag', $slug),
             'menu' => $this->menus->resolve('primary'),
             'posts' => Post::query()->published()->whereHas('tags', fn ($query) => $query->where('slug', $slug))->latest('published_at')->paginate(12),
             'title' => '#'.$slug,
@@ -130,20 +134,26 @@ class PublicSiteController extends Controller
             ->withQueryString();
 
         return Inertia::render('site/blog-index', [
-            'site' => $this->siteProps(),
+            'site' => $this->siteProps('search'),
             'menu' => $this->menus->resolve('primary'),
             'posts' => $posts,
             'title' => $query !== '' ? "Resultados para: {$query}" : 'Búsqueda de publicaciones',
         ]);
     }
 
-    protected function siteProps(): array
+    protected function siteProps(string $context = 'general', ?string $pageSlug = null): array
     {
+        $themePayload = $this->themes->activePayload();
+        $positions = $this->modules
+            ? $this->modules->resolvePositionsForContext($context, $pageSlug, $themePayload['slug'] ?? null)
+            : [];
+
         $props = [
             'identity' => Setting::query()->where('key', 'site.identity')->first()?->value ?? ['name' => 'Atlas CMS'],
             'seo' => Setting::query()->where('key', 'site.seo')->first()?->value ?? [],
             'chrome' => Setting::query()->where('key', 'site.chrome')->first()?->value ?? [],
-            'theme' => $this->themes->activePayload(),
+            'theme' => $themePayload,
+            'positions' => $positions,
             'locale' => app()->getLocale(),
         ];
 

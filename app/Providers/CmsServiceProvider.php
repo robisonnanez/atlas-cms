@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Domain\Content\Contracts\ContentRendererContract;
 use App\Domain\Menus\Contracts\MenuResolverContract;
+use App\Domain\Modules\Contracts\ContentModuleManagerContract;
 use App\Models\Plugin;
 use App\Support\Cms\CmsHookManager;
+use App\Support\Cms\ContentModuleManager;
 use App\Support\Cms\ContentRenderer;
 use App\Support\Cms\InstallStateStore;
 use App\Support\Cms\MenuResolver;
@@ -30,6 +32,8 @@ class CmsServiceProvider extends ServiceProvider
         $this->app->singleton(SeoMetadataBuilder::class);
         $this->app->singleton(ContentRendererContract::class, ContentRenderer::class);
         $this->app->singleton(MenuResolverContract::class, MenuResolver::class);
+        $this->app->singleton(ContentModuleManagerContract::class, ContentModuleManager::class);
+        $this->app->singleton(ContentModuleManager::class);
 
         $this->autoloadPlugins();
     }

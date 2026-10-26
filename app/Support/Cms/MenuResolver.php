@@ -31,6 +31,22 @@ class MenuResolver implements MenuResolverContract
         return $this->hooks->applyFilters('menu.resolved', $items, $location, $menu);
     }
 
+    public function resolveById(int $id): array
+    {
+        $menu = CmsMenu::query()
+            ->with(['items.children.children.children'])
+            ->find($id);
+
+        $items = $menu?->items
+            ->whereNull('parent_id')
+            ->sortBy('sort_order')
+            ->values()
+            ->map(fn (MenuItem $item) => $this->transformItem($item, 1))
+            ->all() ?? [];
+
+        return $this->hooks->applyFilters('menu.resolved', $items, 'id:'.$id, $menu);
+    }
+
     protected function transformItem(MenuItem $item, int $depth): array
     {
         $itemPayload = [

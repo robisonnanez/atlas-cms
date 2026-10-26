@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\ContentModuleController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
@@ -116,6 +117,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('themes', [ThemeController::class, 'index'])->middleware('permission:atlas.themes.view')->name('themes.index');
         Route::post('themes/install', [ThemeController::class, 'install'])->middleware('permission:atlas.themes.activate')->name('themes.install');
         Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->middleware('permission:atlas.themes.activate')->name('themes.activate');
+        Route::get('content-modules', [ContentModuleController::class, 'index'])->middleware('permission:atlas.content_modules.view')->name('content-modules.index');
+        Route::post('content-modules', [ContentModuleController::class, 'store'])->middleware('permission:atlas.content_modules.manage')->name('content-modules.store');
+        Route::put('content-modules/{contentModule}', [ContentModuleController::class, 'update'])->middleware('permission:atlas.content_modules.manage')->name('content-modules.update');
+        Route::delete('content-modules/{contentModule}', [ContentModuleController::class, 'destroy'])->middleware('permission:atlas.content_modules.manage')->name('content-modules.destroy');
+        Route::post('content-modules/reorder', [ContentModuleController::class, 'reorder'])->middleware('permission:atlas.content_modules.manage')->name('content-modules.reorder');
+        Route::post('content-modules/{contentModule}/toggle', [ContentModuleController::class, 'toggle'])->middleware('permission:atlas.content_modules.manage')->name('content-modules.toggle');
 
         Route::get('plugins', [PluginController::class, 'index'])->middleware('permission:atlas.plugins.view')->name('plugins.index');
         Route::post('plugins/install', [PluginController::class, 'install'])->middleware('permission:atlas.plugins.toggle')->name('plugins.install');
