@@ -4,9 +4,15 @@ namespace App\Support\Cms;
 
 class SeoMetadataBuilder
 {
+    public function __construct(
+        protected ?CmsHookManager $hooks = null,
+    ) {
+        $this->hooks = $hooks ?? (app()->bound(CmsHookManager::class) ? app(CmsHookManager::class) : null);
+    }
+
     public function forContent(string $title, ?string $description = null, ?string $canonical = null): array
     {
-        return [
+        $payload = [
             'title' => $title,
             'description' => $description ?: config('app.name').' CMS content',
             'canonical' => $canonical,
@@ -15,5 +21,11 @@ class SeoMetadataBuilder
                 'description' => $description ?: config('app.name'),
             ],
         ];
+
+        if ($this->hooks) {
+            $payload = $this->hooks->applyFilters('seo.meta', $payload, $title, $description, $canonical);
+        }
+
+        return $payload;
     }
 }

@@ -153,6 +153,6 @@ Route::get('/blog', [PublicSiteController::class, 'blog'])->name('blog.index');
 Route::get('/blog/{post:slug}', [PublicSiteController::class, 'post'])->name('blog.show');
 Route::get('/category/{category:slug}', [PublicSiteController::class, 'category'])->name('category.show');
 Route::get('/tag/{slug}', [PublicSiteController::class, 'tag'])->name('tag.show');
-Route::get('/{page:slug}', [PublicSiteController::class, 'page'])->name('page.show');
+Route::get('/{page:slug}', [PublicSiteController::class, 'page'])->where('page', '[a-zA-Z0-9-_]+')->name('page.show');
 
 require __DIR__.'/settings.php';
